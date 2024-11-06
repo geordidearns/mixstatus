@@ -43,7 +43,7 @@ const generateSampleData = () => {
 
 const cohortData = generateSampleData();
 
-const getColorIntensity = (value, max) => {
+const getColorIntensity = (value: number, max: number) => {
 	const intensity = Math.floor((value / max) * 255);
 	return `rgb(0, 0, ${intensity})`;
 };
