@@ -32,8 +32,9 @@ type ProcessedFeed = {
 export const feedProcessor = inngest.createFunction(
 	{ id: "feed-processing" },
 	{ event: "feed-processing" },
-	async ({ step }) => {
-		const services = await fetchServices(step);
+	async ({ event, step }) => {
+		const serviceId = event.data.service_id;
+		const services = await fetchServices(step, serviceId);
 		const serviceFeedItems = await processFeedsForServices(step, services);
 		const updatedRecords = await updateRecords(step, serviceFeedItems);
 
@@ -41,14 +42,18 @@ export const feedProcessor = inngest.createFunction(
 	}
 );
 
-async function fetchServices(step: any): Promise<Service[]> {
+async function fetchServices(
+	step: any,
+	serviceId?: string
+): Promise<Service[]> {
 	return step.run(`fetch-services`, async () => {
-		const { data } = await supabase
-			.from("services")
-			.select("id, feed_url")
-			.eq("id", "004d69f4-63d3-4161-9412-ed2e5566d598");
+		let query = supabase.from("services").select("id, feed_url");
 
-		console.log({ data });
+		if (serviceId) {
+			query = query.eq("id", serviceId);
+		}
+
+		const { data } = await query;
 
 		return data;
 	});

@@ -5,9 +5,15 @@ type SummarizeEvent = {
 		event_id: string;
 	};
 };
+
+type FeedProcessing = {
+	data: {
+		service_id: string;
+	};
+};
 type Events = {
 	"summarize-event": SummarizeEvent;
-	"feed-processing": { data: object };
+	"feed-processing": FeedProcessing;
 };
 
 export const inngest = new Inngest({
