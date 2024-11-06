@@ -11,9 +11,15 @@ type FeedProcessing = {
 		service_id: string;
 	};
 };
+
+type ProcessUnsummarizedEvents = {
+	data: object;
+};
+
 type Events = {
 	"summarize-event": SummarizeEvent;
 	"feed-processing": FeedProcessing;
+	"process-unsummarized": ProcessUnsummarizedEvents;
 };
 
 export const inngest = new Inngest({

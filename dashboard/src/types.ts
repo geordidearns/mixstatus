@@ -19,7 +19,6 @@ export interface ServiceEvent {
 	severity: "critical" | "major" | "minor" | "maintenance" | null;
 	accumulated_time_minutes: number;
 	original_pub_date: string;
-	update_pub_date: string;
 	created_at: string;
 	updated_at: string;
 }
