@@ -253,12 +253,11 @@ export const summarizeEvent = inngest.createFunction(
 									content: [
 										{
 											type: "text",
-											text:
-												`
+											text: `
                           original-publish-date: ${eventData.original_pub_date}
                           title: ${eventData?.title}
                           description: ${descriptionText}
-                        ` ?? "",
+                        `,
 										},
 									],
 								},
