@@ -7,40 +7,72 @@ const supabase = createClient(
 );
 
 const processUnsummarizedEvents = async () => {
-	const batchSize = 10;
+	const batchSize = 5;
+	let totalProcessed = 0;
+	let hasMore = true;
 
-	const { data: events, error } = await supabase
-		.from("service_events")
-		.select("id")
-		.is("summarized_description", null)
-		.limit(batchSize);
+	while (hasMore) {
+		const { data: events, error } = await supabase
+			.from("service_events")
+			.select("id, summarized_description")
+			.not("raw_description", "is", null)
+			.is("summarized_description", null)
+			.limit(batchSize);
 
-	if (error) {
-		console.error("Error fetching unsummarized events:", error);
-		return;
-	}
+		if (error) {
+			console.error("Error fetching unsummarized events:", error);
+			break;
+		}
 
-	if (!events?.length) {
-		console.log("No unsummarized events found");
-		return;
-	}
+		if (!events?.length) {
+			console.log("No more unsummarized events found");
+			hasMore = false;
+			break;
+		}
 
-	console.log(`Processing ${events.length} unsummarized events`);
+		console.log(`Processing batch of ${events.length} unsummarized events`);
 
-	for (const event of events) {
-		try {
-			await inngest.send({
-				name: "summarize-event",
-				data: { event_id: event.id },
-			});
+		// Process all events in current batch concurrently
+		await Promise.all(
+			events.map(async (event) => {
+				try {
+					await inngest.send({
+						name: "summarize-event",
+						data: { event_id: event.id },
+					});
+					console.log(`Queued summarization for event ${event.id}`);
 
-			console.log(`Queued summarization for event ${event.id}`);
-		} catch (error) {
-			console.error(`Failed to queue event ${event.id}:`, error);
+					// Wait for summarization to complete
+					while (true) {
+						const { data: updated } = await supabase
+							.from("service_events")
+							.select("summarized_description")
+							.eq("id", event.id)
+							.single();
+
+						if (updated?.summarized_description) {
+							console.log(`Summarization completed for event ${event.id}`);
+							break;
+						}
+						await new Promise((resolve) => setTimeout(resolve, 1000));
+					}
+				} catch (error) {
+					console.error(`Failed to process event ${event.id}:`, error);
+				}
+			})
+		);
+
+		totalProcessed += events.length;
+
+		if (events.length < batchSize) {
+			hasMore = false;
+		} else {
+			// Wait 5 seconds before processing next batch
+			await new Promise((resolve) => setTimeout(resolve, 10000));
 		}
 	}
 
-	return events.length;
+	return totalProcessed;
 };
 
 export const processBatchOfEvents = inngest.createFunction(

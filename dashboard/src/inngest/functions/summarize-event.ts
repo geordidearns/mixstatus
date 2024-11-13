@@ -34,16 +34,42 @@ const anthropic = new Anthropic({
 	apiKey: process.env.ANTHROPIC_API_KEY ?? "",
 });
 
-async function fetchHtmlContent(url: string): Promise<string | null> {
-	const apiKey = process.env.SCRAPINGANT_API_KEY;
+// async function fetchHtmlContent(url: string): Promise<string | null> {
+// 	const apiKey = process.env.SCRAPINGANT_API_KEY;
 
-	const apiUrl = `https://api.scrapingant.com/v2/extended?url=${url}&x-api-key=${apiKey}&proxy_country=GB`;
+// 	const apiUrl = `https://api.scrapingant.com/v2/extended?url=${url}&x-api-key=${apiKey}&proxy_country=GB`;
+
+// 	try {
+// 		const response = await fetch(apiUrl, {
+// 			method: "GET",
+// 			headers: {
+// 				Accept: "application/json",
+// 			},
+// 		});
+
+// 		if (!response.ok) {
+// 			throw new Error(`HTTP error! status: ${response.status}`);
+// 		}
+
+// 		const data = await response.json();
+
+// 		return data.text;
+// 	} catch (error) {
+// 		console.error("Error fetching HTML content:", error);
+// 		return null;
+// 	}
+// }
+
+async function fetchMarkdownContent(url: string): Promise<string | null> {
+	const apiKey = process.env.JINA_AI_API_KEY;
 
 	try {
-		const response = await fetch(apiUrl, {
+		const response = await fetch(`https://r.jina.ai/${url}`, {
 			method: "GET",
 			headers: {
+				Authorization: `Bearer ${apiKey}`,
 				Accept: "application/json",
+				"X-Locale": "en-GB",
 			},
 		});
 
@@ -51,9 +77,9 @@ async function fetchHtmlContent(url: string): Promise<string | null> {
 			throw new Error(`HTTP error! status: ${response.status}`);
 		}
 
-		const data = await response.json();
+		const res = await response.json();
 
-		return data.text;
+		return res.data.content;
 	} catch (error) {
 		console.error("Error fetching HTML content:", error);
 		return null;
@@ -83,15 +109,19 @@ export const summarizeEvent = inngest.createFunction(
 			return;
 		}
 
-		const descriptionText = await step.run(`fetch-description-text`, async () => {
-			try {
-				const guid: string = eventData?.guid;
+		let descriptionText = null;
 
-				return await fetchHtmlContent(guid);
-			} catch (error) {
-				console.error(error);
-			}
-		});
+		if (!eventData.p_raw_description) {
+			descriptionText = await step.run(`fetch-description-text`, async () => {
+				try {
+					const guid: string = eventData?.guid;
+
+					return await fetchMarkdownContent(guid);
+				} catch (error) {
+					console.error(error);
+				}
+			});
+		}
 
 		const summarizedEvent = await step.run(
 			`summarize-and-parse-event`,
@@ -146,49 +176,6 @@ export const summarizeEvent = inngest.createFunction(
                     - If the event is a scheduled maintenance event, only calculate between progress and completed or resolved updates and return maintenance_minutes property as a rounded integer
 
                     - If the event is not a scheduled maintenance event, set the maintenance_minutes property to null
-
-                    Example JSON result:
-
-                    {
-												title: "Daily Recurring Tests Delayed affecting app.eu.snyk.io",
-												description:
-													"Daily Recurring Tests were delayed within the app.eu.snyk.io environment, causing delays for customers. The issue was identified, investigated, and resolved over several days.",
-												severity: "major",
-												recent_status: "resolved",
-												maintenance_minutes: null,
-												parsed_events: [
-													{
-														status: "ongoing",
-														description:
-															"Our Engineers have identified that daily Recurring Tests are delayed within our app.eu.snyk.io environment.",
-														timestamp: "2024-09-03T08:43:00Z",
-													},
-													{
-														status: "ongoing",
-														description: "Our Engineer's investigations remain ongoing.",
-														timestamp: "2024-09-03T10:19:00Z",
-													},
-													{
-														status: "ongoing",
-														description:
-															"Our Engineers took the decision to cancel the delayed daily Recurring Tests scheduled for the 2nd of September, to prevent them from causing a knock-on delay to the tests scheduled for the 3rd of September.",
-														timestamp: "2024-09-04T07:43:00Z",
-													},
-													{
-														status: "ongoing",
-														description:
-															"Our engineers have confirmed that daily Recurring Tests scheduled to execute on the 4th of September have almost completed.",
-														timestamp: "2024-09-05T12:50:00Z",
-													},
-													{
-														status: "resolved",
-														description:
-															"All scheduled Recurring Tests are running as expected.",
-														timestamp: "2024-09-05T15:08:00Z",
-													},
-												],
-												affected_components: ["app.eu.snyk.io"],
-											}
                   `,
 									type: "text",
 									cache_control: { type: "ephemeral" },
@@ -256,23 +243,73 @@ export const summarizeEvent = inngest.createFunction(
 											text: `
                           original-publish-date: ${eventData.original_pub_date}
                           title: ${eventData?.title}
-                          description: ${descriptionText}
+                          description: ${
+																											eventData?.raw_description ?? descriptionText
+																										}
                         `,
 										},
 									],
 								},
 							],
-						},
-						{
-							headers: {
-								"anthropic-beta": "prompt-caching-2024-07-31",
-							},
 						}
+
+						// Add back when batch processing:
+
+						// {
+						// 	headers: {
+						// 		"anthropic-beta": "prompt-caching-2024-07-31",
+						// 	},
+						// }
+
+						// Example JSON result:
+
+						// {
+						// 		title: "Daily Recurring Tests Delayed affecting app.eu.snyk.io",
+						// 		description:
+						// 			"Daily Recurring Tests were delayed within the app.eu.snyk.io environment, causing delays for customers. The issue was identified, investigated, and resolved over several days.",
+						// 		severity: "major",
+						// 		recent_status: "resolved",
+						// 		maintenance_minutes: null,
+						// 		parsed_events: [
+						// 			{
+						// 				status: "ongoing",
+						// 				description:
+						// 					"Our Engineers have identified that daily Recurring Tests are delayed within our app.eu.snyk.io environment.",
+						// 				timestamp: "2024-09-03T08:43:00Z",
+						// 			},
+						// 			{
+						// 				status: "ongoing",
+						// 				description: "Our Engineer's investigations remain ongoing.",
+						// 				timestamp: "2024-09-03T10:19:00Z",
+						// 			},
+						// 			{
+						// 				status: "ongoing",
+						// 				description:
+						// 					"Our Engineers took the decision to cancel the delayed daily Recurring Tests scheduled for the 2nd of September, to prevent them from causing a knock-on delay to the tests scheduled for the 3rd of September.",
+						// 				timestamp: "2024-09-04T07:43:00Z",
+						// 			},
+						// 			{
+						// 				status: "ongoing",
+						// 				description:
+						// 					"Our engineers have confirmed that daily Recurring Tests scheduled to execute on the 4th of September have almost completed.",
+						// 				timestamp: "2024-09-05T12:50:00Z",
+						// 			},
+						// 			{
+						// 				status: "resolved",
+						// 				description:
+						// 					"All scheduled Recurring Tests are running as expected.",
+						// 				timestamp: "2024-09-05T15:08:00Z",
+						// 			},
+						// 		],
+						// 		affected_components: ["app.eu.snyk.io"],
+						// 	}
 					);
 
 					// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 					// @ts-expect-error
 					const result = JSON.parse(msg.content[0].text);
+
+					console.log({ message: msg });
 
 					const parsedEvents = result.parsed_events
 						.map((event: { timestamp: string }) => ({
@@ -328,12 +365,16 @@ export const summarizeEvent = inngest.createFunction(
 				.from("service_events")
 				.update({
 					title: summarizedEvent.title,
-					accumulated_time_minutes: summarizedEvent.total_accumulated_minutes,
+					accumulated_time_minutes:
+						summarizedEvent.severity === "maintenance"
+							? summarizedEvent.maintenance_minutes
+							: summarizedEvent.total_accumulated_minutes,
 					severity: summarizedEvent.severity,
 					status: summarizedEvent.recent_status,
 					parsed_events: summarizedEvent.parsed_events,
 					affected_components: summarizedEvent.affected_components,
 					summarized_description: summarizedEvent.description,
+					raw_description: descriptionText,
 				})
 				.eq("id", eventId)
 				.select();

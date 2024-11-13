@@ -96,7 +96,6 @@ export async function getDashboardDetails(
 		const sevenDaysAgo = endOfDay(subDays(now, 7));
 		const endOfToday = endOfDay(now);
 
-		// First, get the dashboard with service_ids
 		const { data: dashboard, error: dashboardError } = await client
 			.from("dashboards")
 			.select(
