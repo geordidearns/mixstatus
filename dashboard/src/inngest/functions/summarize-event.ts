@@ -143,7 +143,7 @@ export const summarizeEvent = inngest.createFunction(
 
                     - use a standardized date-time format (ISO-8601) for all timestamps to ensure consistent parsing.
 
-                    - do not edit the input unless converting dates and times to a standardized date-time format (ISO-8601) OR removing links from the content
+                    - do not change the input unless converting dates and times to a standardized date-time format (ISO-8601) OR removing links from the content
 
                     - any human formatted dates or times such as "Posted 1 day ago" should use a standardized date-time format (ISO-8601) instead
 
@@ -173,9 +173,55 @@ export const summarizeEvent = inngest.createFunction(
                     service: "AT&T" would result in ["at&t", "sms", "carrier"]
                     feature: "Webhook notifications" delayed would result in ["webhook notifications", "webhooks", "notifications"]
 
-                    - If the event is a scheduled maintenance event, only calculate between progress and completed or resolved updates and return maintenance_minutes property as a rounded integer
+                    - If the event is a scheduled maintenance event, use the description text to determine the total number of minutes of maintenance. If the description does not have this information only calculate between progress and completed or resolved updates and return maintenance_minutes property as a rounded integer.
+
+										- additionally, if the scheduled maintenance event does not have a time range, set maintenance_minutes to null.
 
                     - If the event is not a scheduled maintenance event, set the maintenance_minutes property to null
+
+
+						Example JSON result:
+
+						{
+								title: "Daily Recurring Tests Delayed affecting app.eu.snyk.io",
+								description:
+									"Daily Recurring Tests were delayed within the app.eu.snyk.io environment, causing delays for customers. The issue was identified, investigated, and resolved over several days.",
+								severity: "major",
+								recent_status: "resolved",
+								maintenance_minutes: null,
+								parsed_events: [
+									{
+										status: "ongoing",
+										description:
+											"Our Engineers have identified that daily Recurring Tests are delayed within our app.eu.snyk.io environment.",
+										timestamp: "2024-09-03T08:43:00Z",
+									},
+									{
+										status: "ongoing",
+										description: "Our Engineer's investigations remain ongoing.",
+										timestamp: "2024-09-03T10:19:00Z",
+									},
+									{
+										status: "ongoing",
+										description:
+											"Our Engineers took the decision to cancel the delayed daily Recurring Tests scheduled for the 2nd of September, to prevent them from causing a knock-on delay to the tests scheduled for the 3rd of September.",
+										timestamp: "2024-09-04T07:43:00Z",
+									},
+									{
+										status: "ongoing",
+										description:
+											"Our engineers have confirmed that daily Recurring Tests scheduled to execute on the 4th of September have almost completed.",
+										timestamp: "2024-09-05T12:50:00Z",
+									},
+									{
+										status: "resolved",
+										description:
+											"All scheduled Recurring Tests are running as expected.",
+										timestamp: "2024-09-05T15:08:00Z",
+									},
+								],
+								affected_components: ["app.eu.snyk.io"],
+							}
                   `,
 									type: "text",
 									cache_control: { type: "ephemeral" },
@@ -251,15 +297,15 @@ export const summarizeEvent = inngest.createFunction(
 									],
 								},
 							],
-						}
+						},
 
 						// Add back when batch processing:
 
-						// {
-						// 	headers: {
-						// 		"anthropic-beta": "prompt-caching-2024-07-31",
-						// 	},
-						// }
+						{
+							headers: {
+								"anthropic-beta": "prompt-caching-2024-07-31",
+							},
+						}
 
 						// Example JSON result:
 

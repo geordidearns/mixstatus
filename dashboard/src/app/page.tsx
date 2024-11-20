@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { getServicesAndEvents } from "@/queries/get-services";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { OnboardingCard } from "@/components/onboarding-card";
 // import CohortAnalysis from "@/components/cohort";
 
 export default async function Services() {
@@ -27,6 +28,7 @@ export default async function Services() {
 				</header>
 				<div className="min-h-screen relative bg-background inset-0 h-full w-full  bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
 					<div className="p-8 relative z-10">
+						<OnboardingCard title="Hi there" description="How are you doing?" />
 						<ServicesTable />
 						{/* <CohortAnalysis /> */}
 					</div>
