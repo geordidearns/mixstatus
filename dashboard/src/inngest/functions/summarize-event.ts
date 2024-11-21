@@ -60,31 +60,31 @@ const anthropic = new Anthropic({
 // 	}
 // }
 
-async function fetchMarkdownContent(url: string): Promise<string | null> {
-	const apiKey = process.env.JINA_AI_API_KEY;
+// async function fetchMarkdownContent(url: string): Promise<string | null> {
+// 	const apiKey = process.env.JINA_AI_API_KEY;
 
-	try {
-		const response = await fetch(`https://r.jina.ai/${url}`, {
-			method: "GET",
-			headers: {
-				Authorization: `Bearer ${apiKey}`,
-				Accept: "application/json",
-				"X-Locale": "en-GB",
-			},
-		});
+// 	try {
+// 		const response = await fetch(`https://r.jina.ai/${url}`, {
+// 			method: "GET",
+// 			headers: {
+// 				Authorization: `Bearer ${apiKey}`,
+// 				Accept: "application/json",
+// 				"X-Locale": "en-GB",
+// 			},
+// 		});
 
-		if (!response.ok) {
-			throw new Error(`HTTP error! status: ${response.status}`);
-		}
+// 		if (!response.ok) {
+// 			throw new Error(`HTTP error! status: ${response.status}`);
+// 		}
 
-		const res = await response.json();
+// 		const res = await response.json();
 
-		return res.data.content;
-	} catch (error) {
-		console.error("Error fetching HTML content:", error);
-		return null;
-	}
-}
+// 		return res.data.content;
+// 	} catch (error) {
+// 		console.error("Error fetching HTML content:", error);
+// 		return null;
+// 	}
+// }
 
 export const summarizeEvent = inngest.createFunction(
 	{
@@ -104,24 +104,25 @@ export const summarizeEvent = inngest.createFunction(
 			return data;
 		});
 
-		if (!eventData) {
-			// Handle error
-			return;
-		}
+		console.log(eventData);
 
-		let descriptionText = null;
+		// if (!eventData || !eventData?.title || eventData?.raw_description) {
+		// 	throw new Error("Some attributes missing on the event data");
+		// }
 
-		if (!eventData.p_raw_description) {
-			descriptionText = await step.run(`fetch-description-text`, async () => {
-				try {
-					const guid: string = eventData?.guid;
+		// let descriptionText = null;
 
-					return await fetchMarkdownContent(guid);
-				} catch (error) {
-					console.error(error);
-				}
-			});
-		}
+		// if (!eventData?.raw_description) {
+		// 	descriptionText = await step.run(`fetch-description-text`, async () => {
+		// 		try {
+		// 			const guid: string = eventData?.guid;
+
+		// 			return await fetchMarkdownContent(guid);
+		// 		} catch (error) {
+		// 			console.error(error);
+		// 		}
+		// 	});
+		// }
 
 		const summarizedEvent = await step.run(
 			`summarize-and-parse-event`,
@@ -178,50 +179,6 @@ export const summarizeEvent = inngest.createFunction(
 										- additionally, if the scheduled maintenance event does not have a time range, set maintenance_minutes to null.
 
                     - If the event is not a scheduled maintenance event, set the maintenance_minutes property to null
-
-
-						Example JSON result:
-
-						{
-								title: "Daily Recurring Tests Delayed affecting app.eu.snyk.io",
-								description:
-									"Daily Recurring Tests were delayed within the app.eu.snyk.io environment, causing delays for customers. The issue was identified, investigated, and resolved over several days.",
-								severity: "major",
-								recent_status: "resolved",
-								maintenance_minutes: null,
-								parsed_events: [
-									{
-										status: "ongoing",
-										description:
-											"Our Engineers have identified that daily Recurring Tests are delayed within our app.eu.snyk.io environment.",
-										timestamp: "2024-09-03T08:43:00Z",
-									},
-									{
-										status: "ongoing",
-										description: "Our Engineer's investigations remain ongoing.",
-										timestamp: "2024-09-03T10:19:00Z",
-									},
-									{
-										status: "ongoing",
-										description:
-											"Our Engineers took the decision to cancel the delayed daily Recurring Tests scheduled for the 2nd of September, to prevent them from causing a knock-on delay to the tests scheduled for the 3rd of September.",
-										timestamp: "2024-09-04T07:43:00Z",
-									},
-									{
-										status: "ongoing",
-										description:
-											"Our engineers have confirmed that daily Recurring Tests scheduled to execute on the 4th of September have almost completed.",
-										timestamp: "2024-09-05T12:50:00Z",
-									},
-									{
-										status: "resolved",
-										description:
-											"All scheduled Recurring Tests are running as expected.",
-										timestamp: "2024-09-05T15:08:00Z",
-									},
-								],
-								affected_components: ["app.eu.snyk.io"],
-							}
                   `,
 									type: "text",
 									cache_control: { type: "ephemeral" },
@@ -289,23 +246,21 @@ export const summarizeEvent = inngest.createFunction(
 											text: `
                           original-publish-date: ${eventData.original_pub_date}
                           title: ${eventData?.title}
-                          description: ${
-																											eventData?.raw_description ?? descriptionText
-																										}
+                          description: ${eventData?.raw_description}
                         `,
 										},
 									],
 								},
 							],
-						},
+						}
 
 						// Add back when batch processing:
 
-						{
-							headers: {
-								"anthropic-beta": "prompt-caching-2024-07-31",
-							},
-						}
+						// {
+						// 	headers: {
+						// 		"anthropic-beta": "prompt-caching-2024-07-31",
+						// 	},
+						// }
 
 						// Example JSON result:
 
@@ -420,7 +375,7 @@ export const summarizeEvent = inngest.createFunction(
 					parsed_events: summarizedEvent.parsed_events,
 					affected_components: summarizedEvent.affected_components,
 					summarized_description: summarizedEvent.description,
-					raw_description: descriptionText,
+					// raw_description: descriptionText,
 				})
 				.eq("id", eventId)
 				.select();

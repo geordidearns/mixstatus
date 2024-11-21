@@ -25,7 +25,7 @@ const processUnsummarizedEvents = async () => {
 		}
 
 		if (!events?.length) {
-			console.log("No more unsummarized events found");
+			console.error("No more unsummarized events found");
 			hasMore = false;
 			break;
 		}
