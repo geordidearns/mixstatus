@@ -104,8 +104,6 @@ export const summarizeEvent = inngest.createFunction(
 			return data;
 		});
 
-		console.log(eventData);
-
 		// if (!eventData || !eventData?.title || eventData?.raw_description) {
 		// 	throw new Error("Some attributes missing on the event data");
 		// }
@@ -366,8 +364,13 @@ export const summarizeEvent = inngest.createFunction(
 				.from("service_events")
 				.update({
 					title: summarizedEvent.title,
+					// If the status is ongoing it should be set to null
+					// If it is maintenance use the maintenance minutes
+					// otherwise use the total accumulated minutes
 					accumulated_time_minutes:
-						summarizedEvent.severity === "maintenance"
+						summarizedEvent.recent_status === "ongoing"
+							? null
+							: summarizedEvent.severity === "maintenance"
 							? summarizedEvent.maintenance_minutes
 							: summarizedEvent.total_accumulated_minutes,
 					severity: summarizedEvent.severity,
