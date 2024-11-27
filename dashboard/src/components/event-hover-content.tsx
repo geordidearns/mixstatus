@@ -1,7 +1,6 @@
 import React from "react";
 import Image from "next/image";
 import { format, isBefore, isToday, isYesterday, startOfToday } from "date-fns";
-import { Button } from "@/components/ui/button";
 
 interface Event {
 	id: string;
@@ -77,7 +76,7 @@ const getEventColor = (severity: Event["severity"]) => {
 	}
 };
 
-const EventItem = ({ event, isLast }: { event: Event; isLast: boolean }) => {
+const EventItem = ({ event }: { event: Event }) => {
 	const today = startOfToday();
 	const eventDate = new Date(event.original_pub_date);
 	const duration = event.accumulated_time_minutes
@@ -171,11 +170,7 @@ const EventContent = ({
 			</div>
 			<div className="mt-4 space-y-1">
 				{events.map((event: Event, idx: number) => (
-					<EventItem
-						key={event.id}
-						event={event}
-						isLast={idx === events.length - 1}
-					/>
+					<EventItem key={event.id} event={event} />
 				))}
 			</div>
 		</div>
