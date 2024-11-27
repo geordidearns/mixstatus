@@ -11,7 +11,6 @@ import {
 } from "@tanstack/react-table";
 import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FacetedFilter } from "./status-facet-filter";
 import { Service } from "@/types";
 import { ServiceCard } from "../service-card";
 import { cn } from "@/lib/utils";
@@ -20,8 +19,10 @@ import {
 	getServicesAndEvents,
 	groupServiceEvents,
 } from "@/queries/get-services";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useSuspenseInfiniteQuery } from "@tanstack/react-query";
 import InfiniteScroll from "@/lib/infinite-scroll";
+import { Suspense } from "react";
+import { LoadingServices } from "./loading-services";
 
 import { createDashboard, updateDashboard } from "@/actions/create-dashboard";
 import { SelectedServicesToast } from "../selected-services-toast";
@@ -32,9 +33,12 @@ export const columns: ColumnDef<Service>[] = [
 	{
 		accessorKey: "name",
 		filterFn: (row, _id, filterValue) => {
-			return row.original.name
-				.toLowerCase()
-				.includes((filterValue as string).toLowerCase());
+			if (!filterValue) return true;
+
+			const name = row.original.name.toLowerCase();
+			const filter = (filterValue as string).toLowerCase();
+
+			return name.startsWith(filter);
 		},
 	},
 	{
@@ -50,13 +54,24 @@ export const columns: ColumnDef<Service>[] = [
 	},
 ];
 
-export function ServicesTable() {
+interface ServicesTableProps {
+	searchValue: string;
+}
+
+export function ServicesTable({ searchValue }: ServicesTableProps) {
+	return (
+		<Suspense fallback={<LoadingServices />}>
+			<ServicesTableContent searchValue={searchValue} />
+		</Suspense>
+	);
+}
+
+export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 	const supabase = createClient();
 	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [activeToastId, setActiveToastId] = useState<string | null>(null);
-	const [searchValue, setSearchValue] = useState<string>("");
 	const [isCreatingDashboard, setCreatingDashboard] = useState<boolean>(false);
 	const [dashboardId, setDashboardId] = useState<string>("");
 	const [isUpdatingDashboard, setUpdatingDashboard] = useState<boolean>(false);
@@ -74,10 +89,10 @@ export function ServicesTable() {
 		isFetchingNextPage,
 		hasNextPage,
 		fetchNextPage,
-	} = useInfiniteQuery({
-		queryKey: ["services-and-events", 1],
+	} = useSuspenseInfiniteQuery({
+		queryKey: ["services-and-events", searchValue],
 		queryFn: ({ pageParam }: { pageParam: number }) =>
-			getServicesAndEvents(supabase, pageParam),
+			getServicesAndEvents(supabase, pageParam, searchValue),
 		initialPageParam: 0,
 		getNextPageParam: (lastPage, allPages) => {
 			const nextPage: number | undefined = lastPage?.length
@@ -86,6 +101,8 @@ export function ServicesTable() {
 
 			return nextPage;
 		},
+		staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
+		retry: 2,
 	});
 
 	useEffect(() => {
@@ -98,7 +115,6 @@ export function ServicesTable() {
 	}, [isError, error]);
 
 	const groupedServiceEvents = useMemo(() => {
-		if (!data) return [];
 		return groupServiceEvents(data.pages.flat());
 	}, [data]);
 
@@ -262,33 +278,7 @@ export function ServicesTable() {
 	});
 
 	return (
-		<div className="rounded mx-auto space-y-8 font-sans">
-			<div className="flex items-center space-x-2">
-				<SearchInput
-					value={searchValue}
-					onChange={(value) => {
-						setSearchValue(value);
-						table.getColumn("name")?.setFilterValue(value);
-					}}
-					onClear={() => {
-						table.setColumnFilters((prev) =>
-							prev.filter((filter) => filter.id !== "name")
-						);
-						setSearchValue("");
-					}}
-				/>
-
-				{table.getColumn("status") && (
-					<FacetedFilter
-						column={table.getColumn("status")}
-						title="Status"
-						options={[
-							{ label: "Operational", value: "operational" },
-							{ label: "Disruption", value: "disruption" },
-						]}
-					/>
-				)}
-			</div>
+		<div className="flex flex-col justify-center rounded mx-auto space-y-8 font-sans">
 			<InfiniteScroll
 				isLoadingIntial={isLoading}
 				isLoadingMore={isFetchingNextPage}

@@ -32,16 +32,17 @@ export function groupServiceEvents(services: any) {
 
 export async function getServicesAndEvents(
 	client: SupabaseClient,
-	page: number
+	page: number,
+	nameFilter?: string
 ) {
 	try {
 		const pageSize = 50;
 		const range = getRange(page, pageSize);
 		const now = new Date();
-		const sevenDaysAgo = endOfDay(subDays(now, 7));
+		const twoWeeksAgo = endOfDay(subDays(now, 14));
 		const endOfToday = endOfDay(now);
 
-		const { data, error } = await client
+		let query = client
 			.from("services")
 			.select(
 				`
@@ -62,16 +63,29 @@ export async function getServicesAndEvents(
         )
       `
 			)
-			.order("name")
+			.order("name");
+
+		if (nameFilter) {
+			query = query.ilike("name", `%${nameFilter}%`);
+		}
+
+		const { data, error } = await query
 			.gte(
 				"service_events.original_pub_date",
-				format(sevenDaysAgo, "yyyy-MM-dd'T'HH:mm:ssXXX")
+				format(twoWeeksAgo, "yyyy-MM-dd'T'HH:mm:ssXXX")
 			)
 			.lte(
 				"service_events.original_pub_date",
 				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX")
 			)
 			.range(range[0], range[1]);
+
+		if (error) {
+			console.error("Error fetching data:", error);
+			throw error;
+		}
+
+		return data;
 
 		if (error) {
 			console.error("Error fetching data:", error);

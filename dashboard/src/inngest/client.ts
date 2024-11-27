@@ -16,10 +16,22 @@ type ProcessUnsummarizedEvents = {
 	data: object;
 };
 
+type ProcessTimespanEvents = {
+	data: object;
+};
+
+type SummarizeTimespanEvent = {
+	data: {
+		event_id: string;
+	};
+};
+
 type Events = {
 	"summarize-event": SummarizeEvent;
 	"feed-processing": FeedProcessing;
 	"process-unsummarized": ProcessUnsummarizedEvents;
+	"process-timespan-events": ProcessTimespanEvents;
+	"summarize-timespan-event": SummarizeTimespanEvent;
 };
 
 export const inngest = new Inngest({
