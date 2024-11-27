@@ -169,7 +169,7 @@ const EventContent = ({
 				</div>
 			</div>
 			<div className="mt-4 space-y-1">
-				{events.map((event: Event, idx: number) => (
+				{events.map((event: Event) => (
 					<EventItem key={event.id} event={event} />
 				))}
 			</div>
