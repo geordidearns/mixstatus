@@ -44,7 +44,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 				{action?.component}
 			</div>
 			<div className="mx-0">
-				<EventGraph numberOfDays={14} serviceEvents={events || []} />
+				<EventGraph
+					numberOfDays={14}
+					serviceEvents={events || []}
+					domain={domain}
+				/>
 			</div>
 		</div>
 	);

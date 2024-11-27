@@ -45,7 +45,7 @@ export const CreateDashboardButton = ({
 			variant={config?.variant ?? undefined}
 			size="sm"
 			onClick={action}
-			className="flex-1 gap-2 px-4 text-md font-semibold text-primary-foreground dark:text-primary transition-colors relative" // removed overflow-hidden
+			className="flex-1 gap-2 px-4 text-md font-semibold text-primary-foreground dark:text-primary transition-colors relative"
 		>
 			<AnimatePresence mode="popLayout" initial={false}>
 				<motion.span

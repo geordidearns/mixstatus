@@ -1,12 +1,12 @@
 import React from "react";
 import { subDays, isSameDay, startOfDay, parseISO } from "date-fns";
 import { TZDate } from "@date-fns/tz";
-
 import {
 	HoverCard,
-	// HoverCardContent,
+	HoverCardContent,
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import EventContent from "../event-hover-content";
 // import EventContent from "../event-card/event-hover-content";
 
 interface Event {
@@ -28,7 +28,7 @@ interface ServiceEvent {
 interface ServiceEventGraph {
 	numberOfDays: number;
 	serviceEvents: ServiceEvent[];
-	// domain: string;
+	domain: string;
 }
 
 const getColor = (events: Event[]): string => {
@@ -54,7 +54,7 @@ const isOngoing = (events: Event[]): boolean => {
 const EventGraph: React.FC<ServiceEventGraph> = ({
 	numberOfDays,
 	serviceEvents,
-	// domain,
+	domain,
 }) => {
 	const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const today = startOfDay(new TZDate(new Date(), userTimeZone));
@@ -85,11 +85,11 @@ const EventGraph: React.FC<ServiceEventGraph> = ({
 								></div>
 							</div>
 						</HoverCardTrigger>
-						{/* {events.length > 0 && (
-              <HoverCardContent side="top" className="w-[400px] p-2">
-                <EventContent events={events} domain={domain} />
-              </HoverCardContent>
-            )} */}
+						{events.length > 0 && (
+							<HoverCardContent side="top" className="w-[400px] p-2">
+								<EventContent events={events} domain={domain} />
+							</HoverCardContent>
+						)}
 					</HoverCard>
 				);
 			})}

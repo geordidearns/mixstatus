@@ -31,10 +31,10 @@ export default async function Services() {
 				<div className="min-h-screen relative bg-background inset-0 h-full w-full  bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
 					<div className="p-8 relative z-10">
 						{/* <OnboardingCard title="Hi there" description="How are you doing?" /> */}
+						{/* <CohortAnalysis /> */}
 						<Suspense>
 							<ServicesWrapper />
 						</Suspense>
-						{/* <CohortAnalysis /> */}
 					</div>
 				</div>
 			</>
