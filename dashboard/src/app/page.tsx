@@ -1,4 +1,4 @@
-import { ServicesTable } from "@/components/services-table";
+// import { ServicesTable } from "@/components/services-table";
 import { createClient } from "@/lib/supabase/server";
 import {
 	dehydrate,
@@ -7,7 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { getServicesAndEvents } from "@/queries/get-services";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { OnboardingCard } from "@/components/onboarding-card";
+// import { OnboardingCard } from "@/components/onboarding-card";
 import { Suspense } from "react";
 import { ServicesWrapper } from "@/components/services-wrapper";
 // import CohortAnalysis from "@/components/cohort";

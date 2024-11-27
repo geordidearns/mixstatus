@@ -27,7 +27,6 @@ import { LoadingServices } from "./loading-services";
 import { createDashboard, updateDashboard } from "@/actions/create-dashboard";
 import { SelectedServicesToast } from "../selected-services-toast";
 import { Switch } from "../ui/switch";
-import { SearchInput } from "../search-input";
 
 export const columns: ColumnDef<Service>[] = [
 	{

@@ -7,14 +7,14 @@ import { useState } from "react";
 
 export function ServicesWrapper() {
 	const [searchInput, setSearchInput] = useState<string>("");
-	const [debouncedValue] = useDebounceValue(searchInput, 300);
+	const [debouncedValue] = useDebounceValue(searchInput.trim(), 300);
 
 	return (
 		<div className="space-y-8">
 			<SearchInput
 				value={searchInput}
 				onChange={(value: string) => {
-					setSearchInput(value.trim());
+					setSearchInput(value); // Remove the trim() here
 				}}
 				onClear={() => {
 					setSearchInput("");
