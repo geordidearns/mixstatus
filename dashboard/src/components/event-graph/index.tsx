@@ -28,7 +28,7 @@ interface ServiceEvent {
 interface ServiceEventGraph {
 	numberOfDays: number;
 	serviceEvents: ServiceEvent[];
-	domain: string;
+	domain?: string;
 }
 
 const getColor = (events: Event[]): string => {
@@ -87,7 +87,7 @@ const EventGraph: React.FC<ServiceEventGraph> = ({
 						</HoverCardTrigger>
 						{events.length > 0 && (
 							<HoverCardContent side="top" className="w-[400px] p-2">
-								<EventContent events={events} domain={domain} />
+								<EventContent events={events} domain={domain ?? ""} />
 							</HoverCardContent>
 						)}
 					</HoverCard>
