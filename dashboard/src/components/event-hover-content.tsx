@@ -143,6 +143,7 @@ const EventContent = ({
 							height={24}
 							alt="Image of company logo"
 							className="rounded"
+							priority={true}
 						/>
 						<div className="text-sm font-semibold text-foreground">{eventDate}</div>
 					</div>
