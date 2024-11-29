@@ -1,7 +1,6 @@
 "use client";
 
 import { useDebounceValue } from "usehooks-ts";
-import { SearchInput } from "./search-input";
 import { ServicesTable } from "./services-table";
 import { useState } from "react";
 import { Input } from "./ui/input";
