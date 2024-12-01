@@ -378,7 +378,7 @@ export const summarizeEvent = inngest.createFunction(
 					parsed_events: summarizedEvent.parsed_events,
 					affected_components: summarizedEvent.affected_components,
 					summarized_description: summarizedEvent.description,
-					// raw_description: descriptionText,
+					updated_at: new Date().toISOString(),
 				})
 				.eq("id", eventId)
 				.select();
