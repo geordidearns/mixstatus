@@ -1,68 +1,40 @@
-import type { Metadata } from "next";
+import "@/app/globals.css";
+import { Metadata } from "next";
 import localFont from "next/font/local";
-import "./globals.css";
-
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
-import { ThemeProvider } from "@/components/theme-provider";
-// import { ThemeToggle } from "@/components/theme-toggle";
-import { Toaster } from "@/components/ui/sonner";
-import ReactQueryProvider from "@/lib/react-query/provider";
-import { cookies } from "next/headers";
 
 const geistSans = localFont({
-	src: "./fonts/GeistVF.woff",
+	src: "../fonts/GeistVF.woff", // Updated path
 	variable: "--font-geist-sans",
 	weight: "100 900",
+	display: "swap",
+	preload: true,
 });
+
 const geistMono = localFont({
-	src: "./fonts/GeistMonoVF.woff",
+	src: "../fonts/GeistMonoVF.woff", // Updated path
 	variable: "--font-geist-mono",
 	weight: "100 900",
+	display: "swap",
+	preload: true,
 });
 
 export const metadata: Metadata = {
-	title: "basestatus",
+	title: "mixstatus",
 	description: "External provider monitoring and alerts",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
 	children,
-}: Readonly<{
+}: {
 	children: React.ReactNode;
-}>) {
-	const sidebarState = (await cookies()).get("sidebar:state");
-
-	let defaultOpen = false;
-	if (sidebarState) {
-		defaultOpen = sidebarState.value === "true";
-	}
-
+}) {
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
 				suppressHydrationWarning
 			>
-				<ReactQueryProvider>
-					<ThemeProvider
-						attribute="class"
-						defaultTheme="system"
-						enableSystem
-						disableTransitionOnChange
-						storageKey="ui-theme"
-					>
-						<div suppressHydrationWarning>
-							<SidebarProvider defaultOpen={defaultOpen}>
-								<AppSidebar />
-								<SidebarInset>
-									<main className="relative z-0">{children}</main>
-								</SidebarInset>
-							</SidebarProvider>
-						</div>
-						<Toaster />
-					</ThemeProvider>
-				</ReactQueryProvider>
+				{children}
 			</body>
 		</html>
 	);
