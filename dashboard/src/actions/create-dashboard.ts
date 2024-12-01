@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 
 export async function createDashboard(selectedServiceIds: string[]) {
-	const supabase = createClient();
+	const supabase = await createClient();
 
 	const {
 		data: { user },
@@ -42,7 +42,7 @@ export async function updateDashboard(
 	dashboardId: string,
 	selectedServiceIds: string[]
 ) {
-	const supabase = createClient();
+	const supabase = await createClient();
 
 	const { data: dashboard, error: dashboardError } = await supabase
 		.from("dashboards")

@@ -23,7 +23,7 @@ export async function OnboardingCard({
 	description,
 	onShowMeHow,
 }: OnboardingCardProps) {
-	const cookieStore = cookies();
+	const cookieStore = await cookies();
 	const dismissed = cookieStore.get(ONBOARDING_COOKIE_NAME)?.value === "true";
 
 	if (dismissed) return null;

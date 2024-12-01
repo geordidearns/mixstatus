@@ -64,7 +64,7 @@ const getEventIcon = (severity: string) => {
 const getEventColor = (severity: Event["severity"]) => {
 	switch (severity) {
 		case "critical":
-			return "bg-destructive";
+			return "bg-red-500";
 		case "major":
 			return "bg-orange-500 dark:bg-orange-600";
 		case "minor":

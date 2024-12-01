@@ -14,7 +14,7 @@ import { ServicesWrapper } from "@/components/services-wrapper";
 
 export default async function Services() {
 	const queryClient = new QueryClient();
-	const supabase = createClient();
+	const supabase = await createClient(); // Add 'await' here
 
 	await queryClient.prefetchInfiniteQuery({
 		queryKey: ["services-and-events", 1],

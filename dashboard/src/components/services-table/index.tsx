@@ -3,7 +3,6 @@
 import * as React from "react";
 import {
 	ColumnDef,
-	SortingState,
 	getCoreRowModel,
 	ColumnFiltersState,
 	getFilteredRowModel,
@@ -68,7 +67,6 @@ export function ServicesTable({ searchValue }: ServicesTableProps) {
 export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 	const supabase = createClient();
 	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
-	const [sorting, setSorting] = useState<SortingState>([]);
 	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [activeToastId, setActiveToastId] = useState<string | null>(null);
 	const [isCreatingDashboard, setCreatingDashboard] = useState<boolean>(false);
@@ -103,6 +101,35 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 		staleTime: 1000 * 60 * 5, // Cache data for 5 minutes
 		retry: 2,
 	});
+
+	useEffect(() => {
+		const apiKey = process.env.NEXT_PUBLIC_ABLY_SUBSCRIBE_ONLY_API_KEY;
+
+		if (!apiKey) {
+			console.error("Ably API key is not configured");
+			return;
+		}
+
+		const url = `https://realtime.ably.io/event-stream?channels=services-updates&v=1.2&key=${apiKey}`;
+		const eventSource = new EventSource(url);
+
+		eventSource.onmessage = (event) => {
+			try {
+				const message = JSON.parse(event.data);
+				// Invalidate the services query to trigger a refresh
+				// You'll need to add your react-query queryClient here
+				// queryClient.invalidateQueries({ queryKey: ['services-and-events'] });
+				console.log({ message });
+			} catch (error) {
+				console.error("Error processing real-time update:", error);
+			}
+		};
+
+		// Cleanup function
+		return () => {
+			eventSource.close();
+		};
+	}, []); // Empty dependency array since we only want to set this up once
 
 	useEffect(() => {
 		if (isError && error) {
@@ -261,17 +288,10 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		onRowSelectionChange: setRowSelection,
-		onSortingChange: (updater) => {
-			setSorting((prev) => {
-				const next = typeof updater === "function" ? updater(prev) : updater;
-				return next;
-			});
-		},
 		onColumnFiltersChange: setColumnFilters,
 		getFilteredRowModel: getFilteredRowModel(),
 		state: {
 			rowSelection,
-			sorting,
 			columnFilters,
 		},
 	});

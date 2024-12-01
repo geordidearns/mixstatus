@@ -14,7 +14,7 @@ export default async function Dashboard({
 }) {
 	const id = (await params).id;
 	const queryClient = new QueryClient();
-	const supabase = createClient();
+	const supabase = await createClient();
 
 	await queryClient.prefetchQuery({
 		queryKey: ["dashboard-services-and-events"],

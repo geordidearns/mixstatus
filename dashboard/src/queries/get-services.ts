@@ -86,15 +86,6 @@ export async function getServicesAndEvents(
 		}
 
 		return data;
-
-		if (error) {
-			console.error("Error fetching data:", error);
-			throw error;
-		}
-
-		if (error) throw error;
-
-		return data;
 	} catch (error) {
 		console.error("Error fetching services:", error);
 		throw error;

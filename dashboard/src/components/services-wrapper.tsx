@@ -2,12 +2,12 @@
 
 import { useDebounceValue } from "usehooks-ts";
 import { ServicesTable } from "./services-table";
-import { useState } from "react";
 import { Input } from "./ui/input";
+import { useState } from "react";
 
 export function ServicesWrapper() {
 	const [searchInput, setSearchInput] = useState<string>("");
-	const [debouncedValue] = useDebounceValue(searchInput, 500);
+	const [debouncedValue] = useDebounceValue(searchInput, 350);
 
 	return (
 		<div className="space-y-8">

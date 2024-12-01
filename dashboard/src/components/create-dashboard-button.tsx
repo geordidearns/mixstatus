@@ -68,7 +68,7 @@ export const CreateDashboardButton = ({
 							animate={{ x: 0, opacity: 1 }}
 							exit={{ x: (status === "pending" ? -1 : 1) * 48, opacity: 0 }}
 							transition={{ type: "spring", bounce: 0.3, duration: 0.6 }}
-							className="line-clamp-1 block" // added block
+							className="line-clamp-1 block"
 						>
 							{config?.label}
 						</motion.span>

@@ -26,12 +26,12 @@ export const metadata: Metadata = {
 	description: "External provider monitoring and alerts",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const sidebarState = cookies().get("sidebar:state");
+	const sidebarState = (await cookies()).get("sidebar:state");
 
 	let defaultOpen = false;
 	if (sidebarState) {
