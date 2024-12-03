@@ -8,7 +8,7 @@ import { Suspense } from "react";
 import { ThemeToggle } from "./theme-toggle";
 
 export function ServicesWrapper() {
-	const [searchInput, setSearchInput] = useQueryState("q");
+	const [searchInput, setSearchInput] = useQueryState("service");
 	const [debouncedValue] = useDebounceValue(searchInput, 350);
 
 	return (

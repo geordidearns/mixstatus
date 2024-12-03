@@ -31,6 +31,7 @@ import { createDashboard, updateDashboard } from "@/actions/create-dashboard";
 import { SelectedServicesToast } from "../selected-services-toast";
 // import { Switch } from "../ui/switch";
 import { OngoingIncidentCard } from "../ongoing-incident-card";
+import { NoResultsFound } from "../results-not-found";
 
 export const columns: ColumnDef<Service>[] = [
 	{
@@ -121,6 +122,7 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 	const [isUpdatingDashboard, setUpdatingDashboard] = useState<boolean>(false);
 	const [shouldUpdateDashboard, setShouldUpdateDashboard] =
 		useState<boolean>(false);
+
 	// const [originalDashboardServices, setOriginalDashboardServices] = useState<
 	// 	string[]
 	// >([]);
@@ -380,6 +382,13 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 		},
 	});
 
+	const hasNoResults =
+		!isLoading && allServices?.length === 0 && !ongoingDisruptionsData?.length;
+
+	if (hasNoResults) {
+		return <NoResultsFound searchValue={searchValue} />;
+	}
+
 	return (
 		<div className="flex flex-col justify-center rounded mx-auto space-y-12 font-sans">
 			{/* Ongoing disruptions */}
@@ -417,47 +426,49 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 			)}
 
 			{/* All services */}
-			<div className="space-y-4">
-				<h3 className="flex items-center text-xs uppercase font-mono font-semibold text-muted-foreground tracking-widest">
-					<Server className="mr-2 h-4 w-4 text-muted-foreground" />
-					All services
-				</h3>
+			{allServices?.length > 0 && (
+				<div className="space-y-4">
+					<h3 className="flex items-center text-xs uppercase font-mono font-semibold text-muted-foreground tracking-widest">
+						<Server className="mr-2 h-4 w-4 text-muted-foreground" />
+						All services
+					</h3>
 
-				<InfiniteScroll
-					isLoadingIntial={isLoading}
-					isLoadingMore={isFetchingNextPage}
-					loadMore={() => hasNextPage && fetchNextPage()}
-				>
-					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-						{table.getRowModel().rows.map((row) => {
-							return (
-								<ServiceCard
-									key={row.original.id}
-									id={row.original.id}
-									name={row.original.name}
-									domain={row.original.domain}
-									service_events={row.original.service_events}
-									className={cn(
-										"transition-all",
-										rowSelection[row.original.id] && "border-indigo-600",
-									)}
-									// action={{
-									// 	component: (
-									// 		<Switch
-									// 			className="data-[state=checked]:bg-indigo-600 data-[state=unchecked]:text-gray-400"
-									// 			checked={!!rowSelection[row.original.id]}
-									// 			onCheckedChange={(checked) =>
-									// 				handleSelectionChange(row.original.id, checked)
-									// 			}
-									// 		/>
-									// 	),
-									// }}
-								/>
-							);
-						})}
-					</div>
-				</InfiniteScroll>
-			</div>
+					<InfiniteScroll
+						isLoadingIntial={isLoading}
+						isLoadingMore={isFetchingNextPage}
+						loadMore={() => hasNextPage && fetchNextPage()}
+					>
+						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+							{table.getRowModel().rows.map((row) => {
+								return (
+									<ServiceCard
+										key={row.original.id}
+										id={row.original.id}
+										name={row.original.name}
+										domain={row.original.domain}
+										service_events={row.original.service_events}
+										className={cn(
+											"transition-all",
+											rowSelection[row.original.id] && "border-indigo-600",
+										)}
+										// action={{
+										// 	component: (
+										// 		<Switch
+										// 			className="data-[state=checked]:bg-indigo-600 data-[state=unchecked]:text-gray-400"
+										// 			checked={!!rowSelection[row.original.id]}
+										// 			onCheckedChange={(checked) =>
+										// 				handleSelectionChange(row.original.id, checked)
+										// 			}
+										// 		/>
+										// 	),
+										// }}
+									/>
+								);
+							})}
+						</div>
+					</InfiniteScroll>
+				</div>
+			)}
 		</div>
 	);
 }

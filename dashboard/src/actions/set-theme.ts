@@ -20,6 +20,7 @@ export const setThemeAction = createSafeActionClient()
 	.schema(schema)
 	.action(async ({ parsedInput: { theme } }): Promise<ActionResponse> => {
 		const cookieStore = await cookies();
+
 		try {
 			cookieStore.set("theme", theme);
 

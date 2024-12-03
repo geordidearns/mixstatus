@@ -51,8 +51,8 @@ export default async function Services() {
 			<Suspense>
 				{shouldShowHeader && <Header />}
 				<div className="min-h-screen relative bg-background inset-0 h-full w-full bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
-					<div className="w-full items-center justify-center p-8 relative z-10">
-						<Suspense fallback={<div>Loading services...</div>}>
+					<div className="w-full items-center justify-center p-4 md:p-8 relative z-10">
+						<Suspense>
 							<ServicesWrapper />
 						</Suspense>
 					</div>
