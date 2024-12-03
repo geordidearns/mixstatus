@@ -22,21 +22,6 @@ function getSeverityColor(severity: string): string {
 	}
 }
 
-function getBorderColor(severity: string): string {
-	switch (severity.toLowerCase()) {
-		case "critical":
-			return "border-red-500";
-		case "major":
-			return "border-orange-500";
-		case "minor":
-			return "border-yellow-500";
-		case "maintenance":
-			return "border-blue-500";
-		default:
-			return "border-muted";
-	}
-}
-
 interface OngoingIncidentCardProps {
 	id: string;
 	name: string;
@@ -66,13 +51,15 @@ export const OngoingIncidentCard: React.FC<OngoingIncidentCardProps> = ({
 					key={id}
 					className={cn(
 						`flex flex-col p-3 rounded-md bg-sidebar dark:bg-card text-card-foreground gap-3 cursor-pointer border`,
-						getBorderColor(latestEvent?.severity ?? ""),
-						"border-l-2",
-						"border-t-border border-r-border border-b-border",
-
 						className,
 					)}
+					style={{ position: "relative" }} // Add relative positioning
 				>
+					{/* Add a pseudo-element for the thicker left border */}
+					<div
+						className={`absolute left-0 top-0 bottom-0 w-1 rounded-tl-lg rounded-bl-lg top-[-1px] bottom-[-1px] left-[-1px] ${color}`}
+					/>
+
 					<div className="flex justify-between items-center">
 						<div className="flex items-center space-x-2">
 							<Image

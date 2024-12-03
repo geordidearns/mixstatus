@@ -14,6 +14,7 @@ import { Service } from "@/types";
 import { ServiceCard } from "../service-card";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { Radio, Server } from "lucide-react";
 import {
 	getOngoingDisruptions,
 	getServicesAndEvents,
@@ -384,7 +385,8 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 			{/* Ongoing disruptions */}
 			{ongoingDisruptionsData?.length > 0 && (
 				<div className="space-y-4">
-					<h3 className="text-sm font-mono font-semibold text-muted-foreground tracking-wide">
+					<h3 className="flex items-center text-xs uppercase font-mono font-semibold text-muted-foreground tracking-widest">
+						<Radio className="mr-2 h-4 w-4 text-muted-foreground" />
 						Ongoing disruptions
 					</h3>
 					<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -416,7 +418,8 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 
 			{/* All services */}
 			<div className="space-y-4">
-				<h3 className="text-sm font-mono font-semibold text-muted-foreground tracking-wide">
+				<h3 className="flex items-center text-xs uppercase font-mono font-semibold text-muted-foreground tracking-widest">
+					<Server className="mr-2 h-4 w-4 text-muted-foreground" />
 					All services
 				</h3>
 
