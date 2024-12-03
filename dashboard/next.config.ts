@@ -1,5 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+	async headers() {
+		return [
+			{
+				source: "/images/:all*",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
+					},
+				],
+			},
+			{
+				source: "/fonts/:all*",
+				headers: [
+					{
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
+					},
+				],
+			},
+		];
+	},
 	async redirects() {
 		return [
 			{
@@ -9,7 +31,10 @@ const nextConfig = {
 			},
 		];
 	},
+
 	images: {
+		formats: ["image/avif", "image/webp"],
+		minimumCacheTTL: 60,
 		remotePatterns: [
 			{
 				protocol: "https",
@@ -18,6 +43,9 @@ const nextConfig = {
 				pathname: "/**",
 			},
 		],
+	},
+	experimental: {
+		optimizePackageImports: ["@radix-ui/react-icons", "@heroicons/react"],
 	},
 };
 

@@ -1,24 +1,16 @@
 import "@/app/globals.css";
 import { Metadata } from "next";
-import localFont from "next/font/local";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import { Suspense } from "react";
 
-const geistSans = localFont({
-	src: "../fonts/GeistVF.woff", // Updated path
-	variable: "--font-geist-sans",
-	weight: "100 900",
-	display: "swap",
-	preload: true,
-});
+import { geistSans, geistMono } from "@/lib/fonts";
 
-const geistMono = localFont({
-	src: "../fonts/GeistMonoVF.woff", // Updated path
-	variable: "--font-geist-mono",
-	weight: "100 900",
-	display: "swap",
-	preload: true,
-});
+export const viewport = {
+	width: "device-width",
+	initialScale: 1,
+	themeColor: "#ffffff",
+};
 
 export const metadata: Metadata = {
 	title: "mixstatus",
@@ -40,8 +32,10 @@ export default function RootLayout({
 				suppressHydrationWarning
 			>
 				{children}
-				<SpeedInsights />
-				<Analytics />
+				<Suspense>
+					<SpeedInsights />
+					<Analytics />
+				</Suspense>
 			</body>
 		</html>
 	);
