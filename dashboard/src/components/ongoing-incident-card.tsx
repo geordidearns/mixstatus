@@ -115,7 +115,7 @@ export const OngoingIncidentCard: React.FC<OngoingIncidentCardProps> = ({
 							</span>
 						</div>
 						<div className="h-px bg-border w-full" />
-						<p className="text-xs text-muted-foreground p-3">
+						<p className="text-xs text-muted-foreground p-3 leading-relaxed">
 							{latestEvent?.summarized_description}
 						</p>
 					</div>
