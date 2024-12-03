@@ -1,6 +1,7 @@
 import "@/app/globals.css";
 import { Metadata } from "next";
 import localFont from "next/font/local";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const geistSans = localFont({
 	src: "../fonts/GeistVF.woff", // Updated path
@@ -35,6 +36,7 @@ export default function RootLayout({
 				suppressHydrationWarning
 			>
 				{children}
+				<SpeedInsights />
 			</body>
 		</html>
 	);

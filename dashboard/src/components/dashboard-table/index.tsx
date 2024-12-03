@@ -13,16 +13,13 @@ import {
 import { toast } from "sonner";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Service } from "@/types";
 import { createClient } from "@/lib/supabase/client";
-import {
-	getDashboardDetails,
-	groupServiceEvents,
-} from "@/queries/get-services";
+import { getDashboardDetails } from "@/queries/get-services";
 import { useQuery } from "@tanstack/react-query";
 import { ServiceCard } from "../service-card";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../search-input";
+import { Service } from "@/types";
 
 export const columns: ColumnDef<Service>[] = [
 	{
@@ -51,24 +48,19 @@ export function DashboardTable({ dashboardId }: { dashboardId: string }) {
 		}
 	}, [isError, error]);
 
-	const groupedServiceEvents = useMemo(() => {
-		if (!data) return [];
-		return groupServiceEvents(data.services?.flat());
-	}, [data]);
-
 	const memoizedServiceEvents = useMemo(() => {
-		let filteredData = groupedServiceEvents;
+		let filteredData;
 		if (searchValue) {
-			filteredData = filteredData.filter((service) =>
-				service.name.toLowerCase().includes(searchValue.toLowerCase())
+			filteredData = data?.filter((service) =>
+				service.name.toLowerCase().includes(searchValue.toLowerCase()),
 			);
 		}
 
 		return filteredData;
-	}, [groupedServiceEvents, searchValue]);
+	}, [data, searchValue]);
 
 	const table = useReactTable({
-		data: memoizedServiceEvents,
+		data: memoizedServiceEvents ?? [],
 		columns,
 		getCoreRowModel: getCoreRowModel(),
 		onRowSelectionChange: setRowSelection,
@@ -93,6 +85,8 @@ export function DashboardTable({ dashboardId }: { dashboardId: string }) {
 		table.getColumn("name")?.setFilterValue("");
 	}, [table]);
 
+	console.log({ data: table.getRowModel().rows[0] });
+
 	return (
 		<div className="rounded mx-auto space-y-8 font-sans">
 			<div className="flex items-center space-x-2">
@@ -109,10 +103,10 @@ export function DashboardTable({ dashboardId }: { dashboardId: string }) {
 						id={row.original.id}
 						name={row.original.name}
 						domain={row.original.domain}
-						events={row.original.service_events}
+						service_events={row.original.service_events}
 						className={cn(
 							"transition-all",
-							rowSelection[row.original.id] && "border-indigo-600"
+							rowSelection[row.original.id] && "border-indigo-600",
 						)}
 					/>
 				))}

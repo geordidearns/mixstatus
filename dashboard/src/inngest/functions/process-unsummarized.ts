@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
 	process.env.SUPABASE_URL!,
-	process.env.SUPABASE_ANON_KEY!
+	process.env.SUPABASE_ANON_KEY!,
 );
 
 const processUnsummarizedEvents = async () => {
@@ -59,7 +59,7 @@ const processUnsummarizedEvents = async () => {
 				} catch (error) {
 					console.error(`Failed to process event ${event.id}:`, error);
 				}
-			})
+			}),
 		);
 
 		totalProcessed += events.length;
@@ -90,5 +90,5 @@ export const processBatchOfEvents = inngest.createFunction(
 				? `Processed ${processedCount} events`
 				: "No events to process",
 		};
-	}
+	},
 );

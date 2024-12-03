@@ -1,13 +1,13 @@
 import Image from "next/image";
 import EventGraph from "./event-graph";
-import { ServiceEvents } from "@/types";
+import { ServiceEventGroup } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface ServiceCardProps {
 	id: string;
 	name: string;
 	domain: string;
-	events: ServiceEvents[];
+	service_events: ServiceEventGroup[];
 	className?: string;
 	action?: {
 		component: React.ReactNode;
@@ -18,7 +18,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 	id,
 	name,
 	domain,
-	events,
+	service_events,
 	className,
 	action,
 }) => {
@@ -27,7 +27,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 			key={id}
 			className={cn(
 				"flex flex-col border p-3 rounded-md bg-sidebar dark:bg-card text-card-foreground gap-4 cursor-pointer",
-				className
+				className,
 			)}
 		>
 			<div className="flex justify-between items-center">
@@ -45,8 +45,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 			</div>
 			<div className="mx-0">
 				<EventGraph
-					numberOfDays={14}
-					serviceEvents={events || []}
+					number_of_days={14}
+					service_events={service_events}
 					domain={domain}
 				/>
 			</div>

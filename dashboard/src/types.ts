@@ -3,10 +3,13 @@ export interface Service {
 	name: string;
 	slug: string;
 	domain: string;
-	service_events: ServiceEvents[];
+	service_events: {
+		date: string;
+		events: ServiceEvent[];
+	}[];
 }
 
-export interface ServiceEvents {
+export interface ServiceEventGroup {
 	date: string;
 	events: ServiceEvent[];
 }
@@ -14,11 +17,20 @@ export interface ServiceEvents {
 export interface ServiceEvent {
 	id: string;
 	title: string;
-	description: string;
-	status: string;
-	severity: "critical" | "major" | "minor" | "maintenance" | null;
+	summarized_description: string;
+	status: ServiceEventStatus;
+	severity: ServiceEventSeverity;
 	accumulated_time_minutes: number;
 	original_pub_date: string;
 	created_at: string;
 	updated_at: string;
 }
+
+export type ServiceEventStatus = "resolved" | "ongoing" | "maintenance";
+
+export type ServiceEventSeverity =
+	| "critical"
+	| "major"
+	| "minor"
+	| "maintenance"
+	| null;

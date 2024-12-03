@@ -5,7 +5,7 @@ import Parser from "rss-parser";
 
 const supabase = createClient(
 	process.env.SUPABASE_URL!,
-	process.env.SUPABASE_ANON_KEY!
+	process.env.SUPABASE_ANON_KEY!,
 );
 
 const parser: Parser = new Parser();
@@ -39,12 +39,13 @@ export const feedProcessor = inngest.createFunction(
 		const updatedRecords = await updateRecords(step, serviceFeedItems);
 
 		return generateSummary(services, serviceFeedItems, updatedRecords);
-	}
+	},
 );
 
 async function fetchServices(
+	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	step: any,
-	serviceId?: string
+	serviceId?: string,
 ): Promise<Service[]> {
 	return step.run(`fetch-services`, async () => {
 		let query = supabase.from("services").select("id, feed_url");
@@ -61,10 +62,9 @@ async function fetchServices(
 
 async function processFeedsForServices(
 	step: any,
-	services: Service[]
+	services: Service[],
 ): Promise<ProcessedFeed[]> {
 	return step.run("process-feeds", async () => {
-		console.log({ services });
 		const items = await Promise.all(services?.map(processFeedForService));
 		return items.filter((item) => item?.items?.length > 0);
 	});
@@ -99,13 +99,13 @@ function mapFeedItem(item: any): FeedItem {
 
 async function updateRecords(
 	step: any,
-	serviceFeedItems: ProcessedFeed[]
+	serviceFeedItems: ProcessedFeed[],
 ): Promise<any[]> {
 	return step.run("update-records", async () => {
 		const results = await Promise.all(
 			serviceFeedItems.flatMap(({ serviceId, items }) =>
-				Promise.all(items.map((item) => upsertServiceEvent(serviceId, item)))
-			)
+				Promise.all(items.map((item) => upsertServiceEvent(serviceId, item))),
+			),
 		);
 		return results.flat().filter(Boolean);
 	});
@@ -139,7 +139,7 @@ async function fetchHtmlContent(url: string): Promise<string | null> {
 
 async function upsertServiceEvent(
 	serviceId: string,
-	item: FeedItem
+	item: FeedItem,
 ): Promise<any | null> {
 	const description = await fetchHtmlContent(item.guid);
 
@@ -162,12 +162,12 @@ async function upsertServiceEvent(
 function generateSummary(
 	services: Service[],
 	serviceFeedItems: ProcessedFeed[],
-	updatedRecords: any[]
+	updatedRecords: any[],
 ) {
 	const totalServices = services.length;
 	const totalFeedItems = serviceFeedItems.reduce(
 		(sum, service) => sum + service.items.length,
-		0
+		0,
 	);
 	const serviceFeedItemsString = JSON.stringify(serviceFeedItems);
 	const payloadSizeInMB =

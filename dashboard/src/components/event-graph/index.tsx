@@ -7,31 +7,16 @@ import {
 	HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import EventContent from "../event-hover-content";
+import { ServiceEvent, ServiceEventGroup } from "@/types";
 // import EventContent from "../event-card/event-hover-content";
 
-interface Event {
-	id: string;
-	title: string;
-	description: string;
-	status: string;
-	severity: "critical" | "major" | "minor" | "maintenance" | null;
-	accumulated_time_minutes: number;
-	original_pub_date: string;
-	created_at: string;
-}
-
-interface ServiceEvent {
-	date: string;
-	events: Event[];
-}
-
 interface ServiceEventGraph {
-	numberOfDays: number;
-	serviceEvents: ServiceEvent[];
+	number_of_days: number;
+	service_events: ServiceEventGroup[];
 	domain?: string;
 }
 
-const getColor = (events: Event[]): string => {
+const getColor = (events: ServiceEvent[]): string => {
 	if (events.length === 0) return "bg-border";
 	if (events.some((e) => e.severity === "critical")) return "bg-red-500";
 	if (events.some((e) => e.severity === "major")) return "bg-orange-500";
@@ -41,7 +26,7 @@ const getColor = (events: Event[]): string => {
 	return "bg-gray-300"; /* If none of the above conditions are met */
 };
 
-const isOngoing = (events: Event[]): boolean => {
+const isOngoing = (events: ServiceEvent[]): boolean => {
 	if (events.length === 0) return false;
 	if (
 		events.some((e) => e.status !== "resolved" && e.severity !== "maintenance")
@@ -52,17 +37,19 @@ const isOngoing = (events: Event[]): boolean => {
 };
 
 const EventGraph: React.FC<ServiceEventGraph> = ({
-	numberOfDays,
-	serviceEvents,
+	number_of_days,
+	service_events,
 	domain,
 }) => {
 	const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const today = startOfDay(new TZDate(new Date(), userTimeZone));
-	const days = Array.from({ length: numberOfDays }, (_, i) => subDays(today, i));
+	const days = Array.from({ length: number_of_days }, (_, i) =>
+		subDays(today, number_of_days - 1 - i),
+	);
 
-	const getEvents = (date: Date): Event[] => {
-		const contribution = serviceEvents.find((item) =>
-			isSameDay(new TZDate(parseISO(item.date), userTimeZone), date)
+	const getEvents = (date: Date): ServiceEvent[] => {
+		const contribution = service_events.find((item: ServiceEventGroup) =>
+			isSameDay(new TZDate(parseISO(item.date), userTimeZone), date),
 		);
 		return contribution ? contribution.events : [];
 	};

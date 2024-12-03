@@ -68,7 +68,7 @@ const config: Config = {
 			},
 		},
 		backgroundImage: {
-			'highlight': `linear-gradient(
+			highlight: `linear-gradient(
 				100deg,
 				rgb(79 70 229 / 100%) 0.9%,
 				rgb(79 70 229 / 100%) 2.4%,
@@ -82,7 +82,7 @@ const config: Config = {
 				rgb(79 70 229 / 0%) 0%,
 				rgb(79 70 229 / 30%) 7.9%,
 				rgb(79 70 229 / 0%) 15%
-			)`
+			)`,
 		},
 	},
 	plugins: [require("tailwindcss-animate")],

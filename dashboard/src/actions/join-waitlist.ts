@@ -7,6 +7,7 @@ import { z } from "zod";
 export interface ActionResponse {
 	success: boolean;
 }
+
 const schema = z.object({
 	email: z.string().email(),
 });

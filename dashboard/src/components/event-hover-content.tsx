@@ -1,17 +1,7 @@
 import React from "react";
 import Image from "next/image";
-import { format, isBefore, isToday, isYesterday, startOfToday } from "date-fns";
-
-interface Event {
-	id: string;
-	title: string;
-	description: string;
-	status: string;
-	severity: "critical" | "major" | "minor" | "maintenance" | null;
-	accumulated_time_minutes: number;
-	original_pub_date: string;
-	created_at: string;
-}
+import { format, isToday, isYesterday } from "date-fns";
+import { ServiceEvent } from "@/types";
 
 const getFormattedDate = (date: Date) => {
 	const dateObj = new Date(date);
@@ -61,7 +51,7 @@ const getEventIcon = (severity: string) => {
 	}
 };
 
-const getEventColor = (severity: Event["severity"]) => {
+const getEventColor = (severity: ServiceEvent["severity"]) => {
 	switch (severity) {
 		case "critical":
 			return "bg-red-500";
@@ -76,9 +66,7 @@ const getEventColor = (severity: Event["severity"]) => {
 	}
 };
 
-const EventItem = ({ event }: { event: Event }) => {
-	const today = startOfToday();
-	const eventDate = new Date(event.original_pub_date);
+const EventItem = ({ event }: { event: ServiceEvent }) => {
 	const duration = event.accumulated_time_minutes
 		? `${event.accumulated_time_minutes} minutes`
 		: null;
@@ -103,17 +91,15 @@ const EventItem = ({ event }: { event: Event }) => {
 					</h3>
 					{event.accumulated_time_minutes ? (
 						<p className="text-xs text-muted-foreground">
-							{event.severity === "maintenance" ? "Completed in" : "Resolved in"}{" "}
+							{event.severity === "maintenance"
+								? "Completed in"
+								: "Resolved in"}{" "}
 							{duration}
-						</p>
-					) : isBefore(eventDate, today) ? (
-						<p className="text-xs text-muted-foreground">
-							Unable to determine resolution time
 						</p>
 					) : (
 						<p className="text-xs text-muted-foreground">{`This ${
 							event.severity === "maintenance"
-								? "maintenance is scheduled for today"
+								? "maintenance is ongoing"
 								: "incident is ongoing"
 						}`}</p>
 					)}
@@ -127,7 +113,7 @@ const EventContent = ({
 	events,
 	domain,
 }: {
-	events: Event[];
+	events: ServiceEvent[];
 	domain: string;
 }) => {
 	const eventDate = getFormattedDate(new Date(events[0]?.original_pub_date));
@@ -139,15 +125,17 @@ const EventContent = ({
 					<div className="flex gap-2 items-center">
 						<Image
 							src={`https://img.logo.dev/${domain}?token=pk_bwZaLSQBRsi45tNJ3wHBXA`}
-							width={24}
-							height={24}
+							width={20}
+							height={20}
 							alt="Image of company logo"
-							className="rounded"
+							className="rounded-full"
 							priority={true}
 						/>
-						<div className="text-sm font-semibold text-foreground">{eventDate}</div>
+						<div className="text-sm font-semibold text-foreground">
+							{eventDate}
+						</div>
 					</div>
-					<div className="flex justify-end">
+					{/* <div className="flex justify-end">
 						<a
 							href="#"
 							className="text-sm text-indigo-600 hover:text-indigo-700 font-semibold flex items-center transition-colors"
@@ -166,11 +154,11 @@ const EventContent = ({
 								/>
 							</svg>
 						</a>
-					</div>
+					</div> */}
 				</div>
 			</div>
 			<div className="mt-4 space-y-1">
-				{events.map((event: Event) => (
+				{events.map((event: ServiceEvent) => (
 					<EventItem key={event.id} event={event} />
 				))}
 			</div>

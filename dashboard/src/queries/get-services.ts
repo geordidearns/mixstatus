@@ -3,38 +3,11 @@ import { Service, ServiceEvent } from "@/types";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { endOfDay, format, parseISO, subDays } from "date-fns";
 
-/* group the events by date 2024-10-19 etc */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function groupServiceEvents(services: any) {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const groupedData: Service[] = services.map((service: any) => {
-		const groupedEvents: { [date: string]: ServiceEvent[] } = {};
-
-		service.service_events.forEach((event: ServiceEvent) => {
-			const date = format(parseISO(event.original_pub_date), "yyyy-MM-dd");
-			if (!groupedEvents[date]) {
-				groupedEvents[date] = [];
-			}
-			groupedEvents[date].push(event);
-		});
-
-		return {
-			...service,
-			service_events: Object.entries(groupedEvents).map(([date, events]) => ({
-				date,
-				events,
-			})),
-		};
-	});
-
-	return groupedData;
-}
-
 export async function getServicesAndEvents(
 	client: SupabaseClient,
 	page: number,
-	nameFilter?: string
-) {
+	nameFilter?: string,
+): Promise<Service[]> {
 	try {
 		const pageSize = 50;
 		const range = getRange(page, pageSize);
@@ -61,7 +34,7 @@ export async function getServicesAndEvents(
           created_at,
           updated_at
         )
-      `
+      `,
 			)
 			.order("name");
 
@@ -72,11 +45,11 @@ export async function getServicesAndEvents(
 		const { data, error } = await query
 			.gte(
 				"service_events.original_pub_date",
-				format(twoWeeksAgo, "yyyy-MM-dd'T'HH:mm:ssXXX")
+				format(twoWeeksAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
 			)
 			.lte(
 				"service_events.original_pub_date",
-				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX")
+				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX"),
 			)
 			.range(range[0], range[1]);
 
@@ -85,16 +58,121 @@ export async function getServicesAndEvents(
 			throw error;
 		}
 
-		return data;
+		return data.map((service) => {
+			const groupedEvents: { [date: string]: ServiceEvent[] } = {};
+
+			service.service_events.forEach((event: ServiceEvent) => {
+				const date = format(parseISO(event.original_pub_date), "yyyy-MM-dd");
+				if (!groupedEvents[date]) {
+					groupedEvents[date] = [];
+				}
+				groupedEvents[date].push(event);
+			});
+
+			return {
+				...service,
+				service_events: Object.entries(groupedEvents).map(([date, events]) => ({
+					date,
+					events,
+				})),
+			};
+		});
 	} catch (error) {
 		console.error("Error fetching services:", error);
 		throw error;
 	}
 }
 
+export async function getOngoingDisruptions(
+	client: SupabaseClient,
+	nameFilter?: string,
+): Promise<Service[]> {
+	const now = new Date();
+	const twoWeeksAgo = endOfDay(subDays(now, 14));
+	const endOfToday = endOfDay(now);
+
+	try {
+		let query = client
+			.from("services")
+			.select(
+				`
+				id,
+				name,
+				slug,
+				domain,
+				service_events (
+					id,
+					title,
+					summarized_description,
+					status,
+					severity,
+					accumulated_time_minutes,
+					original_pub_date,
+					created_at,
+					updated_at
+				)
+			`,
+			)
+			.eq("service_events.status", "ongoing")
+			.order("name");
+
+		if (nameFilter) {
+			query = query.ilike("name", `%${nameFilter}%`);
+		}
+
+		const { data, error } = await query
+			.gte(
+				"service_events.original_pub_date",
+				format(twoWeeksAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+			)
+			.lte(
+				"service_events.original_pub_date",
+				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+			);
+
+		if (error) {
+			console.error("Error fetching ongoing disruptions:", error);
+			throw error;
+		}
+
+		// Filter out services with no service_events and group by date
+		const filteredData = data
+			?.filter(
+				(service) =>
+					service.service_events && service.service_events.length > 0,
+			)
+			.map((service) => {
+				const groupedEvents: { [date: string]: ServiceEvent[] } = {};
+
+				service.service_events.forEach((event: ServiceEvent) => {
+					const date = format(parseISO(event.original_pub_date), "yyyy-MM-dd");
+					if (!groupedEvents[date]) {
+						groupedEvents[date] = [];
+					}
+					groupedEvents[date].push(event);
+				});
+
+				return {
+					...service,
+					service_events: Object.entries(groupedEvents).map(
+						([date, events]) => ({
+							date,
+							events,
+						}),
+					),
+				};
+			});
+
+		return filteredData;
+	} catch (error) {
+		console.error("Error fetching ongoing disruptions:", error);
+		throw error;
+	}
+}
+
 export async function getDashboardDetails(
 	client: SupabaseClient,
-	dashboardId: string
+	dashboardId: string,
 ) {
 	try {
 		const now = new Date();
@@ -112,7 +190,7 @@ export async function getDashboardDetails(
 					id,
 					user_id
 				)
-			`
+			`,
 			)
 			.eq("id", dashboardId)
 			.single();
@@ -144,21 +222,39 @@ export async function getDashboardDetails(
 					created_at,
 					updated_at
 				)
-			`
+			`,
 			)
 			.in("id", serviceIds)
 			.gte(
 				"service_events.original_pub_date",
-				format(sevenDaysAgo, "yyyy-MM-dd'T'HH:mm:ssXXX")
+				format(sevenDaysAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
 			)
 			.lte(
 				"service_events.original_pub_date",
-				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX")
+				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX"),
 			);
 
 		if (servicesError) throw servicesError;
 
-		return { ...dashboard, services };
+		return services.map((service) => {
+			const groupedEvents: { [date: string]: ServiceEvent[] } = {};
+
+			service.service_events.forEach((event: ServiceEvent) => {
+				const date = format(parseISO(event.original_pub_date), "yyyy-MM-dd");
+				if (!groupedEvents[date]) {
+					groupedEvents[date] = [];
+				}
+				groupedEvents[date].push(event);
+			});
+
+			return {
+				...service,
+				service_events: Object.entries(groupedEvents).map(([date, events]) => ({
+					date,
+					events,
+				})),
+			};
+		});
 	} catch (error) {
 		console.error("Error fetching dashboard details:", error);
 		throw error;
