@@ -1,16 +1,10 @@
 import "@/app/globals.css";
-import type { Metadata } from "next";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/lib/react-query/provider";
 // import { cookies } from "next/headers";
-
-export const metadata: Metadata = {
-	title: "mixstatus",
-	description: "External provider monitoring and alerts",
-};
 
 export default async function RootLayout({
 	children,

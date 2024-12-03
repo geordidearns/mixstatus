@@ -15,44 +15,55 @@ import {
 import { ServicesWrapper } from "@/components/services-wrapper";
 // import CohortAnalysis from "@/components/cohort";
 import { showHeader } from "@/flags";
-import MixstatusLogo from "@/components/mixstatus-logo";
+import { Suspense } from "react";
+import { Header } from "@/components/header";
 
-export default async function Services() {
-	const shouldShowHeader = await showHeader();
+async function prefetchData() {
 	const queryClient = new QueryClient();
 	const supabase = await createClient();
 
-	await queryClient.prefetchInfiniteQuery({
-		queryKey: ["services-and-events"],
-		queryFn: ({ pageParam }) => getServicesAndEvents(supabase, pageParam),
-		initialPageParam: 0,
-	});
+	// Fetch data in parallel
+	await Promise.all([
+		queryClient.prefetchInfiniteQuery({
+			queryKey: ["services-and-events"],
+			queryFn: ({ pageParam }) => getServicesAndEvents(supabase, pageParam),
+			initialPageParam: 0,
+			staleTime: 30 * 1000, // 30 seconds
+			gcTime: 5 * 60 * 1000, // 5 minutes
+		}),
+		queryClient.prefetchQuery({
+			queryKey: ["ongoing-disruptions"],
+			queryFn: () => getOngoingDisruptions(supabase),
+			staleTime: 30 * 1000,
+			gcTime: 5 * 60 * 1000,
+		}),
+	]);
 
-	await queryClient.prefetchQuery({
-		queryKey: ["ongoing-disruptions"],
-		queryFn: () => getOngoingDisruptions(supabase),
-	});
+	return queryClient;
+}
+
+export default async function Services() {
+	const [queryClient, shouldShowHeader] = await Promise.all([
+		prefetchData(),
+		showHeader(),
+	]);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<>
-				{shouldShowHeader ? (
-					<header className="sticky top-0 z-50 flex h-12 shrink-0 justify-center items-center gap-1 border-b px-2 bg-background">
-						{/* <SidebarTrigger /> */}
-						<div className="flex items-center gap-2">
-							<MixstatusLogo size={24} />
-							{/* <span className="font-mono font-bold text-lg">mixstatus</span> */}
-						</div>
-					</header>
-				) : null}
-				<div className="min-h-screen relative bg-background inset-0 h-full w-full  bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
+			<Suspense>
+				{shouldShowHeader && <Header />}
+				<div className="min-h-screen relative bg-background inset-0 h-full w-full bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
 					<div className="w-full items-center justify-center p-8 relative z-10">
-						{/* <OnboardingCard title="Hi there" description="How are you doing?" /> */}
-						{/* <CohortAnalysis /> */}
-						<ServicesWrapper />
+						<Suspense fallback={<div>Loading services...</div>}>
+							<ServicesWrapper />
+						</Suspense>
 					</div>
 				</div>
-			</>
+			</Suspense>
 		</HydrationBoundary>
 	);
 }
+
+// Add route segment config
+export const runtime = "edge"; // Optional: Use edge runtime if possible
+export const revalidate = 30; // Revalidate every 30 seconds
