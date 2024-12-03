@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
 import { Suspense } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { geistSans, geistMono } from "@/lib/fonts";
 
@@ -16,9 +17,9 @@ export const viewport = {
 
 export const metadata: Metadata = {
 	title: "mixstatus",
-	description: "Monitor disruptions in services you depend on",
+	description: "Monitor disruptions in services you depend on.",
 	icons: {
-		icon: "./favicon.ico",
+		icon: "./icon.ico",
 	},
 };
 
@@ -33,7 +34,7 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
 				suppressHydrationWarning
 			>
-				{children}
+				<NuqsAdapter>{children}</NuqsAdapter>
 				<Suspense>
 					<SpeedInsights />
 					<Analytics />

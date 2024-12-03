@@ -1,13 +1,14 @@
 "use client";
 
 import { useDebounceValue } from "usehooks-ts";
+import { useQueryState } from "nuqs";
 import { ServicesTable } from "./services-table";
 import { Input } from "./ui/input";
-import { useState } from "react";
+import { Suspense } from "react";
 import { ThemeToggle } from "./theme-toggle";
 
 export function ServicesWrapper() {
-	const [searchInput, setSearchInput] = useState<string>("");
+	const [searchInput, setSearchInput] = useQueryState("q");
 	const [debouncedValue] = useDebounceValue(searchInput, 350);
 
 	return (
@@ -17,14 +18,16 @@ export function ServicesWrapper() {
 					<Input
 						placeholder="Find a service..."
 						type="search"
-						value={searchInput}
+						value={searchInput || ""}
 						onChange={(e) => setSearchInput(e.target.value.trim())}
 						className="font-mono rounded-full p-6 bg-sidebar dark:bg-card focus:border-indigo-600 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
 					/>
 				</div>
 				<ThemeToggle />
 			</div>
-			<ServicesTable searchValue={debouncedValue} />
+			<Suspense>
+				<ServicesTable searchValue={debouncedValue ?? ""} />
+			</Suspense>
 		</div>
 	);
 }
