@@ -58,8 +58,8 @@ export const config = {
 		// Regular expression pattern:
 		// / - starts with slash
 		// (?!pattern) - negative lookahead (don't match these patterns)
-		// api|_next/static|_next/image|favicon.ico - exclude these paths
+		// api|_next/static|_next/image|icon.ico - exclude these paths
 		// .* - match everything else
-		"/((?!api|_next/static|_next/image|favicon.ico).*)",
+		"/((?!api|_next/static|_next/image|icon.ico).*)",
 	],
 };

@@ -61,7 +61,7 @@ const EventGraph: React.FC<ServiceEventGraph> = ({
 				const color = getColor(events);
 
 				return (
-					<HoverCard key={index} openDelay={300}>
+					<HoverCard key={index} openDelay={0} closeDelay={0}>
 						<HoverCardTrigger className="cursor-pointer">
 							<div className="relative w-2 h-2">
 								<div className={`absolute inset-0 rounded-full ${color}`}></div>
