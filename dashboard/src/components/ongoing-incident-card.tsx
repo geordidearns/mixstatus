@@ -41,7 +41,13 @@ export const OngoingIncidentCard: React.FC<OngoingIncidentCardProps> = ({
 	className,
 	action,
 }) => {
-	const latestEvent = service_events[0].events[0];
+	const latestEvent = service_events
+		.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0]
+		?.events.sort(
+			(a, b) =>
+				new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+		)[0];
+
 	const color = getSeverityColor(latestEvent?.severity ?? "");
 
 	return (

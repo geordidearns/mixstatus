@@ -390,7 +390,7 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 	}
 
 	return (
-		<div className="flex flex-col justify-center rounded mx-auto space-y-12 font-sans">
+		<div className="flex flex-col justify-center rounded mx-auto space-y-12 font-sans pt-4 sm:pt-0">
 			{/* Ongoing disruptions */}
 			{ongoingDisruptionsData?.length > 0 && (
 				<div className="space-y-4">
