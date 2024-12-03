@@ -22,7 +22,10 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
 	title: "mixstatus",
-	description: "External provider monitoring and alerts",
+	description: "Monitor disruptions in services you depend on",
+	icons: {
+		icon: "./favicon.ico",
+	},
 };
 
 export default function RootLayout({
