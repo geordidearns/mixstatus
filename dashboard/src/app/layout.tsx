@@ -1,3 +1,5 @@
+export const runtime = "edge";
+
 import "@/app/globals.css";
 import { Metadata } from "next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
