@@ -25,13 +25,13 @@ function getSeverityColor(severity: string): string {
 function getBorderColor(severity: string): string {
 	switch (severity.toLowerCase()) {
 		case "critical":
-			return "border-red-500/50";
+			return "border-red-500";
 		case "major":
-			return "border-orange-500/50";
+			return "border-orange-500";
 		case "minor":
-			return "border-yellow-500/50";
+			return "border-yellow-500";
 		case "maintenance":
-			return "border-blue-500/50";
+			return "border-blue-500";
 		default:
 			return "border-muted";
 	}
@@ -65,8 +65,11 @@ export const OngoingIncidentCard: React.FC<OngoingIncidentCardProps> = ({
 				<div
 					key={id}
 					className={cn(
-						`flex flex-col border p-3 rounded-md bg-sidebar dark:bg-card text-card-foreground gap-3 cursor-pointer`,
+						`flex flex-col p-3 rounded-md bg-sidebar dark:bg-card text-card-foreground gap-3 cursor-pointer border`,
 						getBorderColor(latestEvent?.severity ?? ""),
+						"border-l-2",
+						"border-t-border border-r-border border-b-border",
+
 						className,
 					)}
 				>
