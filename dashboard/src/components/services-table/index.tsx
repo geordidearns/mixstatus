@@ -24,9 +24,6 @@ import {
 	useSuspenseQuery,
 } from "@tanstack/react-query";
 import InfiniteScroll from "@/lib/infinite-scroll";
-import { Suspense } from "react";
-import { LoadingServices } from "./loading-services";
-
 import { createDashboard, updateDashboard } from "@/actions/create-dashboard";
 import { SelectedServicesToast } from "../selected-services-toast";
 // import { Switch } from "../ui/switch";

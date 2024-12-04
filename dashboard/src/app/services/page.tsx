@@ -47,7 +47,7 @@ async function prefetchData() {
 			queryKey: ["ongoing-disruptions"],
 			queryFn: () => getOngoingDisruptions(supabase),
 			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
-			gcTime: 10 * 60 * 1000, // Increase gc time to 10 minutes
+			gcTime: 10 * 60 * 1000, // Cache time
 		}),
 	]);
 
