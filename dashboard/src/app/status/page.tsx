@@ -15,23 +15,8 @@ import { ServicesWrapper } from "@/components/services-wrapper";
 import { showHeader } from "@/flags";
 import { Header } from "@/components/header";
 
-import { cache } from "react";
-
-export const getQueryClient = cache(
-	() =>
-		new QueryClient({
-			defaultOptions: {
-				queries: {
-					staleTime: 5 * 60 * 1000, // 5 minutes
-					gcTime: 10 * 60 * 1000, // 10 minutes
-					refetchOnWindowFocus: true, // Prevent refetch on window focus
-				},
-			},
-		}),
-);
-
 async function prefetchData() {
-	const queryClient = getQueryClient(); // Use shared QueryClient instead of creating new one
+	const queryClient = new QueryClient(); // Use shared QueryClient instead of creating new one
 	const supabase = await createClient();
 
 	await Promise.all([
