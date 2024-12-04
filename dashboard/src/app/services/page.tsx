@@ -13,7 +13,6 @@ import {
 import { ServicesWrapper } from "@/components/services-wrapper";
 // import CohortAnalysis from "@/components/cohort";
 import { showHeader } from "@/flags";
-import { Suspense } from "react";
 import { Header } from "@/components/header";
 
 import { cache } from "react";
