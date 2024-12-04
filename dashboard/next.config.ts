@@ -26,7 +26,7 @@ const nextConfig = {
 		return [
 			{
 				source: "/",
-				destination: "/services",
+				destination: "/status",
 				permanent: true,
 			},
 		];
