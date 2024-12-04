@@ -4,8 +4,9 @@ import { useDebounceValue } from "usehooks-ts";
 import { useQueryState } from "nuqs";
 import { ServicesTable } from "./services-table";
 import { Input } from "./ui/input";
-import { Suspense } from "react";
 import { ThemeToggle } from "./theme-toggle";
+import { Suspense } from "react";
+import { LoadingServices } from "./services-table/loading-services";
 
 export function ServicesWrapper() {
 	const [searchInput, setSearchInput] = useQueryState("service");
@@ -25,7 +26,8 @@ export function ServicesWrapper() {
 				</div>
 				<ThemeToggle />
 			</div>
-			<Suspense>
+
+			<Suspense fallback={<LoadingServices />}>
 				<ServicesTable searchValue={debouncedValue ?? ""} />
 			</Suspense>
 		</div>

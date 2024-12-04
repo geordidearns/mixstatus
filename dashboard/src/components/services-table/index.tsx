@@ -105,11 +105,7 @@ function useServicesQueries(searchValue: string) {
 }
 
 export function ServicesTable({ searchValue }: ServicesTableProps) {
-	return (
-		<Suspense fallback={<LoadingServices />}>
-			<ServicesTableContent searchValue={searchValue} />
-		</Suspense>
-	);
+	return <ServicesTableContent searchValue={searchValue} />;
 }
 
 export function ServicesTableContent({ searchValue }: ServicesTableProps) {

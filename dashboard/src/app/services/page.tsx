@@ -16,24 +16,38 @@ import { showHeader } from "@/flags";
 import { Suspense } from "react";
 import { Header } from "@/components/header";
 
+import { cache } from "react";
+
+export const getQueryClient = cache(
+	() =>
+		new QueryClient({
+			defaultOptions: {
+				queries: {
+					staleTime: 5 * 60 * 1000, // 5 minutes
+					gcTime: 10 * 60 * 1000, // 10 minutes
+					refetchOnWindowFocus: true, // Prevent refetch on window focus
+				},
+			},
+		}),
+);
+
 async function prefetchData() {
-	const queryClient = new QueryClient();
+	const queryClient = getQueryClient(); // Use shared QueryClient instead of creating new one
 	const supabase = await createClient();
 
-	// Fetch data in parallel
 	await Promise.all([
 		queryClient.prefetchInfiniteQuery({
 			queryKey: ["services-and-events"],
 			queryFn: ({ pageParam }) => getServicesAndEvents(supabase, pageParam),
 			initialPageParam: 0,
-			staleTime: 30 * 1000, // 30 seconds
-			gcTime: 5 * 60 * 1000, // 5 minutes
+			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
+			gcTime: 10 * 60 * 1000, // Increase gc time to 10 minutes
 		}),
 		queryClient.prefetchQuery({
 			queryKey: ["ongoing-disruptions"],
 			queryFn: () => getOngoingDisruptions(supabase),
-			staleTime: 30 * 1000,
-			gcTime: 5 * 60 * 1000,
+			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
+			gcTime: 10 * 60 * 1000, // Increase gc time to 10 minutes
 		}),
 	]);
 
@@ -48,16 +62,12 @@ export default async function Services() {
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<Suspense>
-				{shouldShowHeader && <Header />}
-				<div className="min-h-screen relative bg-background inset-0 h-full w-full bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
-					<div className="w-full items-center justify-center p-4 md:p-8 relative z-10">
-						<Suspense>
-							<ServicesWrapper />
-						</Suspense>
-					</div>
+			{shouldShowHeader && <Header />}
+			<div className="min-h-screen relative bg-background inset-0 h-full w-full bg-[radial-gradient(var(--dot-color)_1px,transparent_1px)] [background-size:16px_16px]">
+				<div className="w-full items-center justify-center p-4 md:p-8 relative z-10">
+					<ServicesWrapper />
 				</div>
-			</Suspense>
+			</div>
 		</HydrationBoundary>
 	);
 }
