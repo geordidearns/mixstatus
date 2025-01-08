@@ -15,7 +15,8 @@ import {
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Service } from "@/types";
+import { Service, ServiceEvent } from "@/types";
+import { Timeline } from "./event-timeline";
 // import { differenceInMonths } from "date-fns";
 
 interface ServiceDetailsProps {
@@ -124,6 +125,23 @@ function processServiceEvents(service: Service) {
 // 		: `Last ${monthsDiff} month${monthsDiff === 1 ? "" : "s"}`;
 // }
 
+const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
+	let mostRecentEvent: ServiceEvent | null = null;
+	let mostRecentDate = new Date(0);
+
+	service?.service_events.forEach((eventGroup) => {
+		eventGroup?.events?.forEach((event) => {
+			const eventDate = new Date(event.created_at);
+			if (event.status === "ongoing" && eventDate > mostRecentDate) {
+				mostRecentDate = eventDate;
+				mostRecentEvent = event;
+			}
+		});
+	});
+
+	return mostRecentEvent;
+};
+
 export function ServiceDetails({ slug }: ServiceDetailsProps) {
 	const { data, isError } = useQuery({
 		queryKey: ["service", slug],
@@ -159,6 +177,8 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 	}
 
 	const service = data[0];
+	const ongoingEvent = getMostRecentOngoingEvent(service);
+
 	const chartData = processServiceEvents(service);
 	const totalEvents: number = chartData.reduce(
 		(sum, item) => sum + item.value,
@@ -189,6 +209,23 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 						</div>
 					</div>
 				</div>
+
+				{ongoingEvent && (
+					<div className="bg-sidebar border border-border rounded-md p-4">
+						<h3 className="text-sm font-medium text-muted-foreground mb-4">
+							Ongoing Incident
+						</h3>
+						<h4 className="text-base font-semibold mb-2">
+							{ongoingEvent.title}
+						</h4>
+						{ongoingEvent.summarized_description && (
+							<p className="text-sm text-muted-foreground mb-6">
+								{ongoingEvent.summarized_description}
+							</p>
+						)}
+						<Timeline event={ongoingEvent} />
+					</div>
+				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div className="bg-sidebar h-full border border-border rounded-md p-3 space-y-2">

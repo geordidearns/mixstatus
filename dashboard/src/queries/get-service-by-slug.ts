@@ -19,6 +19,7 @@ export async function getServiceBySlug(
           id,
           title,
           summarized_description,
+					parsed_events,
           status,
           severity,
           accumulated_time_minutes,

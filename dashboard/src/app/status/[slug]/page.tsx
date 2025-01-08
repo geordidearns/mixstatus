@@ -42,7 +42,7 @@ export async function generateMetadata(props: ServicePageProps) {
 		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
 		.join(" ");
 	return {
-		title: `Is ${formattedSlug} down? See the latest info on the status of ${formattedSlug}`,
-		description: `If ${formattedSlug} is having issues, monitor the latest status changes or outages here.`,
+		title: `Is ${formattedSlug} down? See the latest status of ${formattedSlug}`,
+		description: `If ${formattedSlug} is experiencing issues, monitor status changes or outages here.`,
 	};
 }
