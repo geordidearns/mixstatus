@@ -2,11 +2,13 @@ import Image from "next/image";
 import EventGraph from "./event-graph";
 import { ServiceEventGroup } from "@/types";
 import { cn } from "@/lib/utils";
+// import Link from "next/link";
 
 interface ServiceCardProps {
 	id: string;
 	name: string;
 	domain: string;
+	// slug: string;
 	service_events: ServiceEventGroup[];
 	className?: string;
 	action?: {
@@ -18,11 +20,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 	id,
 	name,
 	domain,
+	// slug,
 	service_events,
 	className,
 	action,
 }) => {
 	return (
+		// <Link href={`/status/${slug}`} className="block" prefetch>
 		<div
 			key={id}
 			className={cn(
@@ -36,8 +40,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 						src={`https://img.logo.dev/${domain}?token=pk_bwZaLSQBRsi45tNJ3wHBXA`}
 						width={16}
 						height={16}
-						alt={`${name} logo`}
-						className="rounded-full"
+						alt={`${domain} logo image`}
+						className="rounded-full w-auto h-auto"
 					/>
 					<span className="text-sm font-medium">{name}</span>
 				</div>
@@ -51,5 +55,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 				/>
 			</div>
 		</div>
+		// </Link>
 	);
 };

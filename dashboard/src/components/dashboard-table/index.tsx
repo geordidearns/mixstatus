@@ -102,6 +102,7 @@ export function DashboardTable({ dashboardId }: { dashboardId: string }) {
 						key={row.original.id}
 						id={row.original.id}
 						name={row.original.name}
+						// slug={row.original.slug}
 						domain={row.original.domain}
 						service_events={row.original.service_events}
 						className={cn(

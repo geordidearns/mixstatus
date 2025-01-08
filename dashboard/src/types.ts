@@ -22,6 +22,8 @@ export interface ServiceEvent {
 	severity: ServiceEventSeverity;
 	accumulated_time_minutes: number;
 	original_pub_date: string;
+	affected_region: string;
+	affected_components: string[];
 	created_at: string;
 	updated_at: string;
 }

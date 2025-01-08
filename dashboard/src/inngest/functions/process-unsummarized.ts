@@ -15,8 +15,9 @@ const processUnsummarizedEvents = async () => {
 		const { data: events, error } = await supabase
 			.from("service_events")
 			.select("id, summarized_description")
-			.not("raw_description", "is", null)
-			.is("summarized_description", null)
+			// .not("raw_description", "is", null)
+			// .is("summarized_description", null)
+			.eq("status", "ongoing")
 			.limit(batchSize);
 
 		if (error) {

@@ -16,7 +16,7 @@ import { showHeader } from "@/flags";
 import { Header } from "@/components/header";
 
 async function prefetchData() {
-	const queryClient = new QueryClient(); // Use shared QueryClient instead of creating new one
+	const queryClient = new QueryClient();
 	const supabase = await createClient();
 
 	await Promise.all([
@@ -31,7 +31,7 @@ async function prefetchData() {
 			queryKey: ["ongoing-disruptions"],
 			queryFn: () => getOngoingDisruptions(supabase),
 			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
-			gcTime: 10 * 60 * 1000, // Cache time
+			gcTime: 10 * 60 * 1000, // Cache time 10 minutes
 		}),
 	]);
 

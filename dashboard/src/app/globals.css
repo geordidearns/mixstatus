@@ -14,6 +14,11 @@ body {
 
 @layer base {
 	:root {
+		--color-blue-500: 59 130 246;    /* Tailwind blue-500 */
+		--color-yellow-500: 234 179 8;   /* Tailwind yellow-500 */
+		--color-orange-500: 249 115 22;  /* Tailwind orange-500 */
+		--color-red-500: 239 68 68;      /* Tailwind red-500 */
+
 		--background: 0 0% 100%;
 		--foreground: 0 0% 3.9%;
 		--card: 0 0% 100%;
@@ -94,5 +99,16 @@ body {
 	}
 	body {
 		@apply bg-background text-foreground;
+
+				/* For Webkit-based browsers (Chrome, Safari and Opera) */
+		.scrollbar-hide::-webkit-scrollbar {
+			display: none;
+		}
+
+		/* For IE, Edge and Firefox */
+		.scrollbar-hide {
+			-ms-overflow-style: none;  /* IE and Edge */
+			scrollbar-width: none;  /* Firefox */
+		}
 	}
 }

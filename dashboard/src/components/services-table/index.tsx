@@ -439,6 +439,7 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 										id={row.original.id}
 										name={row.original.name}
 										domain={row.original.domain}
+										// slug={row.original.slug}
 										service_events={row.original.service_events}
 										className={cn(
 											"transition-all",

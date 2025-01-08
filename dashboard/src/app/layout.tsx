@@ -1,4 +1,4 @@
-export const runtime = "edge";
+// export const runtime = "edge";
 
 import "@/app/globals.css";
 import { Metadata } from "next";
@@ -8,6 +8,7 @@ import { Suspense } from "react";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 import { geistSans, geistMono } from "@/lib/fonts";
+import Providers from "./providers";
 
 export const viewport = {
 	width: "device-width",
@@ -34,7 +35,10 @@ export default function RootLayout({
 				className={`${geistSans.variable} ${geistMono.variable} antialiased font-sans`}
 				suppressHydrationWarning
 			>
-				<NuqsAdapter>{children}</NuqsAdapter>
+				<Providers>
+					<NuqsAdapter>{children}</NuqsAdapter>
+				</Providers>
+
 				<Suspense>
 					<SpeedInsights />
 					<Analytics />

@@ -127,8 +127,8 @@ const EventContent = ({
 							src={`https://img.logo.dev/${domain}?token=pk_bwZaLSQBRsi45tNJ3wHBXA`}
 							width={20}
 							height={20}
-							alt="Image of company logo"
-							className="rounded-full"
+							alt={`${domain} logo image`}
+							className="rounded-full w-auto h-auto"
 							priority={true}
 						/>
 						<div className="text-sm font-semibold text-foreground">

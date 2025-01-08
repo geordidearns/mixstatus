@@ -19,6 +19,13 @@ interface SummarizedEvent {
 	maintenance_minutes: number | null;
 	parsed_events: ParsedEvent[];
 	affected_components: string[];
+	affected_region:
+		| "north-america"
+		| "europe"
+		| "asia"
+		| "australasia"
+		| "south-america"
+		| "global";
 	total_accumulated_minutes?: number;
 }
 
@@ -42,7 +49,7 @@ function convertToUTCISOString(dateString: string) {
 
 const supabase = createClient(
 	process.env.SUPABASE_URL!,
-	process.env.SUPABASE_ANON_KEY!
+	process.env.SUPABASE_ANON_KEY!,
 );
 
 const anthropic = new Anthropic({
@@ -59,7 +66,8 @@ function processEvents(events: ParsedEvent[]): {
 			timestamp: convertToUTCISOString(event.timestamp) || event.timestamp,
 		}))
 		.sort(
-			(a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+			(a, b) =>
+				new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime(),
 		);
 
 	let previousTimestamp: Date | null = null;
@@ -72,7 +80,7 @@ function processEvents(events: ParsedEvent[]): {
 		if (previousTimestamp) {
 			minutesSinceLastUpdate = differenceInMinutes(
 				currentTimestamp,
-				previousTimestamp
+				previousTimestamp,
 			);
 			totalAccumulatedMinutes += minutesSinceLastUpdate;
 		}
@@ -87,7 +95,7 @@ function processEvents(events: ParsedEvent[]): {
 async function updateServiceEvent(
 	supabase: SupabaseClient,
 	eventId: string,
-	summarizedEvent: SummarizedEvent
+	summarizedEvent: SummarizedEvent,
 ) {
 	return supabase
 		.from("service_events")
@@ -97,12 +105,13 @@ async function updateServiceEvent(
 				summarizedEvent.recent_status === "ongoing"
 					? null
 					: summarizedEvent.severity === "maintenance"
-					? summarizedEvent.maintenance_minutes
-					: summarizedEvent.total_accumulated_minutes,
+						? summarizedEvent.maintenance_minutes
+						: summarizedEvent.total_accumulated_minutes,
 			severity: summarizedEvent.severity,
 			status: summarizedEvent.recent_status,
 			parsed_events: summarizedEvent.parsed_events,
 			affected_components: summarizedEvent.affected_components,
+			affected_region: summarizedEvent.affected_region,
 			summarized_description: summarizedEvent.description,
 			updated_at: new Date().toISOString(),
 		})
@@ -129,7 +138,7 @@ async function publishStatusUpdate(eventId: string, status: string) {
 				name: "status.update",
 				data: { event_id: eventId, status },
 			}),
-		}
+		},
 	);
 
 	if (!response.ok) {
@@ -160,7 +169,7 @@ export const summarizeEvent = inngest.createFunction(
 		});
 
 		const ANTHROPIC_SYSTEM_PROMPT = `
-			Your task is to parse markdown into events return only valid JSON format.
+			Your task is to parse html, text or markdown into events return only valid JSON format.
 
 			The following rules must be followed to ensure data accuracy in the result.
 
@@ -198,6 +207,8 @@ export const summarizeEvent = inngest.createFunction(
 			service: "AT&T" would result in ["at&t", "sms", "carrier"]
 			feature: "Webhook notifications" delayed would result in ["webhook notifications", "webhooks", "notifications"]
 
+			- Determine the affected_region based on the location of the affected components. If the affected components are in multiple regions, use the global region. The regions are: north-america, europe, asia, australasia, south-america, global.
+
 			- If the event is a scheduled maintenance event, use the description text to determine the total number of minutes of maintenance. If the description does not have this information only calculate between progress and completed or resolved updates and return maintenance_minutes property as a rounded integer.
 
 			- additionally, if the scheduled maintenance event does not have a time range, set maintenance_minutes to null.
@@ -231,7 +242,8 @@ export const summarizeEvent = inngest.createFunction(
 									type: "text",
 									cache_control: { type: "ephemeral" },
 									text: JSON.stringify({
-										title: "Daily Recurring Tests Delayed affecting app.eu.snyk.io",
+										title:
+											"Daily Recurring Tests Delayed affecting app.eu.snyk.io",
 										description:
 											"Daily Recurring Tests were delayed within the app.eu.snyk.io environment, causing delays for customers. The issue was identified, investigated, and resolved over several days.",
 										severity: "major",
@@ -246,7 +258,8 @@ export const summarizeEvent = inngest.createFunction(
 											},
 											{
 												status: "ongoing",
-												description: "Our Engineer's investigations remain ongoing.",
+												description:
+													"Our Engineer's investigations remain ongoing.",
 												timestamp: "2024-09-03T10:19:00Z",
 											},
 											{
@@ -293,7 +306,7 @@ export const summarizeEvent = inngest.createFunction(
 				// @ts-expect-error
 				const result = JSON.parse(msg.content[0].text) as SummarizedEvent;
 				const { updatedEvents, totalAccumulatedMinutes } = processEvents(
-					result.parsed_events
+					result.parsed_events,
 				);
 
 				return {
@@ -301,17 +314,17 @@ export const summarizeEvent = inngest.createFunction(
 					parsed_events: updatedEvents,
 					total_accumulated_minutes: totalAccumulatedMinutes,
 				};
-			}
+			},
 		);
 
 		await step.run("upsert-event", () =>
-			updateServiceEvent(supabase, eventId, summarizedEvent)
+			updateServiceEvent(supabase, eventId, summarizedEvent),
 		);
 
 		await step.run("publish-status", () =>
-			publishStatusUpdate(eventId, summarizedEvent.recent_status)
+			publishStatusUpdate(eventId, summarizedEvent.recent_status),
 		);
 
 		return { success: true, message: "Successfully summarized event" };
-	}
+	},
 );
