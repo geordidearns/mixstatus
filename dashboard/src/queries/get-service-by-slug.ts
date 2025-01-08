@@ -24,7 +24,9 @@ export async function getServiceBySlug(
           accumulated_time_minutes,
           original_pub_date,
           created_at,
-          updated_at
+          updated_at,
+          affected_region,
+          affected_components
         )
       `)
 			.eq("slug", slug);

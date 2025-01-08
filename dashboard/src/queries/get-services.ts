@@ -32,7 +32,9 @@ export async function getServicesAndEvents(
           accumulated_time_minutes,
           original_pub_date,
           created_at,
-          updated_at
+          updated_at,
+          affected_region,
+          affected_components
         )
       `,
 			)
@@ -109,7 +111,9 @@ export async function getOngoingDisruptions(
 					accumulated_time_minutes,
 					original_pub_date,
 					created_at,
-					updated_at
+					updated_at,
+					affected_region,
+					affected_components
 				)
 			`,
 			)
@@ -220,7 +224,9 @@ export async function getDashboardDetails(
 					accumulated_time_minutes,
 					original_pub_date,
 					created_at,
-					updated_at
+					updated_at,
+					affected_region,
+					affected_components
 				)
 			`,
 			)
