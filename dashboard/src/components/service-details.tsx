@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Label, Pie, PieChart } from "recharts";
 import { getServiceBySlug } from "@/queries/get-service-by-slug";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Suspense } from "react";
 import { LoadingServices } from "./services-table/loading-services";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/chart";
 import { Service, ServiceEvent } from "@/types";
 import { Timeline } from "./event-timeline";
+import { formatDistanceToNowStrict, parseISO } from "date-fns";
 // import { differenceInMonths } from "date-fns";
 
 interface ServiceDetailsProps {
@@ -105,26 +106,6 @@ function processServiceEvents(service: Service) {
 	];
 }
 
-// function getFirstEventDate(service: Service): string {
-// 	let firstDate: Date | null = null;
-
-// 	service?.service_events.forEach((eventGroup) => {
-// 		eventGroup?.events?.forEach((event) => {
-// 			const eventDate = new Date(event.created_at);
-// 			if (!firstDate || eventDate < firstDate) {
-// 				firstDate = eventDate;
-// 			}
-// 		});
-// 	});
-
-// 	if (!firstDate) return "No events";
-
-// 	const monthsDiff = differenceInMonths(new Date(), firstDate);
-// 	return monthsDiff === 0
-// 		? "This month"
-// 		: `Last ${monthsDiff} month${monthsDiff === 1 ? "" : "s"}`;
-// }
-
 const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
 	let mostRecentEvent: ServiceEvent | null = null;
 	let mostRecentDate = new Date(0);
@@ -212,10 +193,21 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 
 				{ongoingEvent && (
 					<div className="flex flex-col space-y-8 bg-sidebar border border-border rounded-md p-4">
-						<div className="flex flex-col space-y-2">
-							<h3 className="text-sm font-medium text-muted-foreground">
-								Ongoing Incident
-							</h3>
+						<div className="flex flex-col space-y-4">
+							<div className="flex justify-between items-center">
+								<h3 className="text-sm font-medium text-muted-foreground">
+									Ongoing Disruption
+								</h3>
+								<span className=" flex items-center gap-1 text-xs tabular-nums font-semibold text-muted-foreground bg-background rounded-md px-2 py-1 border border-border">
+									<Clock className="h-3 w-3" />
+									{formatDistanceToNowStrict(
+										parseISO(
+											ongoingEvent.parsed_events?.[0]?.timestamp ||
+												ongoingEvent.original_pub_date,
+										),
+									)}
+								</span>
+							</div>
 							<h4 className="text-base font-semibold">{ongoingEvent.title}</h4>
 							{ongoingEvent.summarized_description && (
 								<p className="text-sm text-muted-foreground">

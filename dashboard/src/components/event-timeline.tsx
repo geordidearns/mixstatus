@@ -55,37 +55,36 @@ export function Timeline({ event }: { event: ServiceEvent }) {
 						/>
 					</div>
 
-					<div className="flex-1 ml-6 space-y-2 -mt-2">
+					<div className="flex-1 ml-6 space-y-3 -mt-1">
 						<div className="flex justify-between items-center">
-							<h4 className="text-sm font-medium leading-none text-foreground">
+							<h4 className="flex text-sm font-semibold leading-none text-foreground">
 								{getEventTitle(update, index === sortedEvents.length - 1)}
 							</h4>
-							<div className="flex flex-col gap-1">
-								<TooltipProvider>
-									<Tooltip delayDuration={0}>
-										<TooltipTrigger asChild>
-											<span className="text-xs tabular-nums font-semibold text-muted-foreground bg-background rounded-md px-2 py-1 border border-border">
-												{formatDistanceToNowStrict(new Date(update.timestamp), {
-													addSuffix: true,
-												})}
-											</span>
-										</TooltipTrigger>
-										<TooltipContent>
-											<span className="font-semibold text-xs">
-												{format(
-													new Date(update.timestamp),
-													"EEE, MMM d, yyyy, hh:mm a (zzz)",
-												)}
-											</span>
-										</TooltipContent>
-									</Tooltip>
-								</TooltipProvider>
-							</div>
 						</div>
 
 						<p className="text-sm leading-relaxed text-muted-foreground">
 							{update.description}
 						</p>
+
+						<TooltipProvider>
+							<Tooltip delayDuration={0}>
+								<TooltipTrigger asChild>
+									<div className="text-xs tabular-nums font-semibold text-muted-foreground">
+										{formatDistanceToNowStrict(new Date(update.timestamp), {
+											addSuffix: true,
+										})}
+									</div>
+								</TooltipTrigger>
+								<TooltipContent>
+									<span className="font-semibold text-xs">
+										{format(
+											new Date(update.timestamp),
+											"EEE, MMM d, yyyy, hh:mm a (zzz)",
+										)}
+									</span>
+								</TooltipContent>
+							</Tooltip>
+						</TooltipProvider>
 					</div>
 				</div>
 			))}
