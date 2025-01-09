@@ -188,14 +188,14 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 	return (
 		<Suspense fallback={<LoadingServices />}>
 			<div className="flex flex-col gap-4">
-				<div className="bg-sidebar h-full border border-border rounded-full px-4 py-3">
+				<div className="bg-sidebar h-full border border-border rounded-md px-4 py-3">
 					<div className="flex items-center gap-4">
 						<Image
 							src={`https://img.logo.dev/${service?.domain}?token=pk_bwZaLSQBRsi45tNJ3wHBXA`}
 							alt={service?.name}
 							className="rounded-full"
-							height={48}
-							width={48}
+							height={44}
+							width={44}
 							priority
 						/>
 
@@ -211,24 +211,24 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 				</div>
 
 				{ongoingEvent && (
-					<div className="bg-sidebar border border-border rounded-md p-4">
-						<h3 className="text-sm font-medium text-muted-foreground mb-4">
-							Ongoing Incident
-						</h3>
-						<h4 className="text-base font-semibold mb-2">
-							{ongoingEvent.title}
-						</h4>
-						{ongoingEvent.summarized_description && (
-							<p className="text-sm text-muted-foreground mb-6">
-								{ongoingEvent.summarized_description}
-							</p>
-						)}
+					<div className="flex flex-col space-y-8 bg-sidebar border border-border rounded-md p-4">
+						<div className="flex flex-col space-y-2">
+							<h3 className="text-sm font-medium text-muted-foreground">
+								Ongoing Incident
+							</h3>
+							<h4 className="text-base font-semibold">{ongoingEvent.title}</h4>
+							{ongoingEvent.summarized_description && (
+								<p className="text-sm text-muted-foreground">
+									{ongoingEvent.summarized_description}
+								</p>
+							)}
+						</div>
 						<Timeline event={ongoingEvent} />
 					</div>
 				)}
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-					<div className="bg-sidebar h-full border border-border rounded-md p-3 space-y-2">
+					<div className="bg-sidebar h-full border border-border rounded-md p-4 space-y-2">
 						<h3 className="text-sm font-medium text-muted-foreground mb-4">
 							Recent events
 						</h3>

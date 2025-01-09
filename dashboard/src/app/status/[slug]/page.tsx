@@ -28,7 +28,7 @@ export default async function ServicePage(props: ServicePageProps) {
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
-			<div className="container p-8">
+			<div className="p-8 h-full w-full">
 				<ServiceDetails slug={params.slug} />
 			</div>
 		</HydrationBoundary>

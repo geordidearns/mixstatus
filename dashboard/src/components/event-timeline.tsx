@@ -1,6 +1,17 @@
 import { cn } from "@/lib/utils";
 import { ServiceEvent } from "@/types";
-import { formatDistanceToNow, compareDesc, parseISO } from "date-fns";
+import {
+	format,
+	formatDistanceToNowStrict,
+	compareDesc,
+	parseISO,
+} from "date-fns";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function getStatusColor(status: string, isLastEvent: boolean): string {
 	if (status === "resolved") return "bg-green-500";
@@ -39,22 +50,36 @@ export function Timeline({ event }: { event: ServiceEvent }) {
 									update.status ?? "",
 									index === sortedEvents.length - 1,
 								),
-								"h-2 w-2 rounded-full", // Updated classes
+								"h-2 w-2 rounded-full",
 							)}
 						/>
 					</div>
 
-					<div className="flex-1 ml-6 space-y-4">
-						<div className="flex justify-between items-center mb-4 -mt-1">
+					<div className="flex-1 ml-6 space-y-2 -mt-2">
+						<div className="flex justify-between items-center">
 							<h4 className="text-sm font-medium leading-none text-foreground">
 								{getEventTitle(update, index === sortedEvents.length - 1)}
 							</h4>
 							<div className="flex flex-col gap-1">
-								<span className="text-xs tabular-nums text-muted-foreground">
-									{formatDistanceToNow(new Date(update.timestamp), {
-										addSuffix: true,
-									})}
-								</span>
+								<TooltipProvider>
+									<Tooltip delayDuration={0}>
+										<TooltipTrigger asChild>
+											<span className="text-xs tabular-nums font-semibold text-muted-foreground bg-background rounded-md px-2 py-1 border border-border">
+												{formatDistanceToNowStrict(new Date(update.timestamp), {
+													addSuffix: true,
+												})}
+											</span>
+										</TooltipTrigger>
+										<TooltipContent>
+											<span className="font-semibold text-xs">
+												{format(
+													new Date(update.timestamp),
+													"EEE, MMM d, yyyy, hh:mm a (zzz)",
+												)}
+											</span>
+										</TooltipContent>
+									</Tooltip>
+								</TooltipProvider>
 							</div>
 						</div>
 
