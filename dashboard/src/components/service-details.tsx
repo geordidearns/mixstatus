@@ -13,7 +13,7 @@ import { getServiceBySlug } from "@/queries/get-service-by-slug";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Clock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { LoadingServices } from "./services-table/loading-services";
 import Image from "next/image";
 import {
@@ -27,30 +27,42 @@ import {
 import { Service, ServiceEvent } from "@/types";
 import { Timeline } from "./event-timeline";
 import {
+	differenceInMinutes,
+	endOfMonth,
 	format,
 	formatDistanceToNowStrict,
 	parseISO,
+	startOfMonth,
 	subMonths,
 } from "date-fns";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 interface ServiceDetailsProps {
 	slug: string;
 }
 
-function getSeverityColor(severity: string): string {
-	switch (severity.toLowerCase()) {
-		case "critical":
-			return "bg-red-500";
-		case "major":
-			return "bg-orange-500";
-		case "minor":
-			return "bg-yellow-500";
-		case "maintenance":
-			return "bg-blue-500";
-		default:
-			return "bg-muted";
-	}
-}
+type ChartView = "events" | "time";
+
+// function getSeverityColor(severity: string): string {
+// 	switch (severity.toLowerCase()) {
+// 		case "critical":
+// 			return "bg-red-500";
+// 		case "major":
+// 			return "bg-orange-500";
+// 		case "minor":
+// 			return "bg-yellow-500";
+// 		case "maintenance":
+// 			return "bg-blue-500";
+// 		default:
+// 			return "bg-muted";
+// 	}
+// }
 
 const chartConfig = {
 	maintenance: {
@@ -73,7 +85,7 @@ const chartConfig = {
 
 function processServiceEvents(service: Service) {
 	// Get the start of the 6-month range
-	const startDate = subMonths(new Date(), 5);
+	const startDate = startOfMonth(subMonths(new Date(), 6));
 
 	// Create an array of the last 6 months
 	const months = Array.from({ length: 6 }, (_, i) => {
@@ -111,6 +123,58 @@ function processServiceEvents(service: Service) {
 	return monthlyData;
 }
 
+function processServiceEventTimes(service: Service) {
+	const startDate = startOfMonth(subMonths(new Date(), 6));
+
+	// Create an array of the last 6 months with start/end dates for each month
+	const monthlyData = Array.from({ length: 6 }, (_, i) => {
+		const date = subMonths(new Date(), 5 - i);
+		const monthStart = startOfMonth(date);
+		const monthEnd = endOfMonth(date);
+		const totalMinutesInMonth = differenceInMinutes(monthEnd, monthStart) + 1;
+
+		return {
+			month: format(date, "MMM"),
+			totalMinutes: 0,
+			totalMinutesInMonth,
+			percentage: 0, // Will store percentage value
+		};
+	});
+
+	// Process events
+	service?.service_events.forEach((eventGroup) => {
+		eventGroup?.events?.forEach((event) => {
+			const eventDate = parseISO(event.created_at);
+
+			if (eventDate >= startDate) {
+				const eventMonth = format(eventDate, "MMM");
+				const monthData = monthlyData.find((data) => data.month === eventMonth);
+
+				if (monthData) {
+					if (event.status === "ongoing") {
+						const startTime = parseISO(event.original_pub_date);
+						const timeInMinutes = Math.floor(
+							(new Date().getTime() - startTime.getTime()) / (1000 * 60),
+						);
+						monthData.totalMinutes += timeInMinutes;
+					} else if (event?.accumulated_time_minutes) {
+						monthData.totalMinutes += event.accumulated_time_minutes;
+					}
+				}
+			}
+		});
+	});
+
+	// Calculate percentages
+	monthlyData.forEach((data) => {
+		data.percentage = Number(
+			((data.totalMinutes / data.totalMinutesInMonth) * 100).toFixed(2),
+		);
+	});
+
+	return monthlyData;
+}
+
 const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
 	let mostRecentEvent: ServiceEvent | null = null;
 	let mostRecentDate = new Date(0);
@@ -129,6 +193,8 @@ const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
 };
 
 export function ServiceDetails({ slug }: ServiceDetailsProps) {
+	const [chartView, setChartView] = useState<ChartView>("events");
+
 	const { data, isError } = useQuery({
 		queryKey: ["service", slug],
 		queryFn: async () => {
@@ -165,11 +231,10 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 	const service = data[0];
 	const ongoingEvent = getMostRecentOngoingEvent(service);
 
-	const chartData = processServiceEvents(service);
-	// const totalEvents: number = chartData.reduce(
-	// 	(sum, item) => sum + item.value,
-	// 	0,
-	// );
+	const eventChartData = processServiceEvents(service);
+	const timeChartData = processServiceEventTimes(service);
+
+	const chartData = chartView === "events" ? eventChartData : timeChartData;
 
 	return (
 		<Suspense fallback={<LoadingServices />}>
@@ -226,10 +291,14 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 					<div className="bg-sidebar h-full border border-border rounded-md p-4 space-y-2">
-						<h3 className="text-sm font-medium text-muted-foreground mb-4">
+						<div className="flex items-center gap-2 font-semibold  text-muted-foreground">
+							<span>🛠️</span>
+							<span>WIP</span>
+						</div>
+						{/* <h3 className="text-sm font-medium text-muted-foreground mb-4">
 							Recent events
-						</h3>
-						<div className="h-56 overflow-y-auto space-y-2 scrollbar-hide">
+						</h3> */}
+						{/* <div className="h-56 overflow-y-auto space-y-2 scrollbar-hide">
 							{service?.service_events.map((eventGroup, index) =>
 								eventGroup?.events.map((event, eventIndex) => (
 									<div
@@ -245,97 +314,114 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 									</div>
 								)),
 							)}
-						</div>
+						</div> */}
 					</div>
 					<div className="bg-sidebar h-full border border-border rounded-md p-3 space-y-2">
-						<h3 className="text-sm font-medium text-muted-foreground mb-4">
-							Disruptions
-						</h3>
-						{/* <ChartContainer
-							config={chartConfig}
-							className="mx-auto aspect-square max-h-[200px]"
-						>
-							<PieChart>
-								<ChartTooltip
-									cursor={false}
-									content={<ChartTooltipContent hideLabel />}
-								/>
-								<Pie
-									data={chartData}
-									dataKey="value" // Changed from "visitors"
-									nameKey="name" // Changed from "browser"
-									innerRadius={60}
-									outerRadius={80} // Added outerRadius
-									paddingAngle={2} // Added padding between segments
-									cx="50%" // Center horizontally
-									cy="50%" // Center vertically
-								>
-									<Label
-										content={({ viewBox }) => {
-											if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-												return (
-													<text
-														x={viewBox.cx}
-														y={viewBox.cy}
-														textAnchor="middle"
-														dominantBaseline="middle"
-													>
-														<tspan
-															x={viewBox.cx}
-															y={viewBox.cy}
-															className="fill-foreground text-3xl font-bold font-mono"
-														>
-															{totalEvents}
-														</tspan>
-														<tspan
-															x={viewBox.cx}
-															y={(viewBox.cy || 0) + 24}
-															className="font-mono fill-muted-foreground"
-														>
-															Total
-														</tspan>
-													</text>
-												);
-											}
-										}}
-									/>
-								</Pie>
-							</PieChart>
-						</ChartContainer> */}
+						<div className="flex items-center justify-between mb-4">
+							<h3 className="text-sm font-medium text-muted-foreground">
+								Disruptions
+							</h3>
+							<Select
+								value={chartView}
+								onValueChange={(value: ChartView) => setChartView(value)}
+							>
+								<SelectTrigger className="h-8 w-[140px] text-xs text-muted-foreground font-semibold ring-offset-0 ring-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus-visible:border-indigo-500 data-[state=open]:border-indigo-500 transition-colors">
+									<SelectValue placeholder="Select view" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem className="text-xs" value="events">
+										Disruption Type
+									</SelectItem>
+									<SelectItem className="text-xs" value="time">
+										Total Time
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 
 						<ChartContainer config={chartConfig}>
 							<ResponsiveContainer width="100%" height={300}>
-								<BarChart data={chartData} margin={{ left: -32 }} height={500}>
-									<CartesianGrid strokeDasharray="3 3" vertical={false} />
-									<XAxis dataKey="month" tickLine={false} axisLine={false} />
-									<YAxis tickLine={false} axisLine={false} />
-									<ChartTooltip content={<ChartTooltipContent />} />
-									<ChartLegend content={<ChartLegendContent />} />
-									<Bar
-										dataKey="critical"
-										stackId="a"
-										fill={chartConfig.critical.color}
-										radius={[0, 0, 0, 0]} // Top bar: round top corners
-									/>
-									<Bar
-										dataKey="major"
-										stackId="b"
-										fill={chartConfig.major.color}
-										radius={[0, 0, 0, 0]} // Middle bar: no rounded corners
-									/>
-									<Bar
-										dataKey="minor"
-										stackId="c"
-										fill={chartConfig.minor.color}
-										radius={[0, 0, 0, 0]} // Middle bar: no rounded corners
-									/>
-									<Bar
-										dataKey="maintenance"
-										stackId="d"
-										fill={chartConfig.maintenance.color}
-										radius={[0, 0, 0, 0]} // Bottom bar: round bottom corners
-									/>
-								</BarChart>
+								{chartView === "events" ? (
+									<BarChart
+										data={chartData}
+										margin={{ left: -32 }}
+										height={500}
+									>
+										<CartesianGrid strokeDasharray="3 3" vertical={false} />
+										<XAxis dataKey="month" tickLine={false} axisLine={false} />
+										<YAxis tickLine={false} axisLine={false} />
+										<ChartTooltip content={<ChartTooltipContent />} />
+										<ChartLegend content={<ChartLegendContent />} />
+										<Bar
+											dataKey="critical"
+											stackId="a"
+											fill={chartConfig.critical.color}
+											radius={[0, 0, 0, 0]}
+										/>
+										<Bar
+											dataKey="major"
+											stackId="b"
+											fill={chartConfig.major.color}
+											radius={[0, 0, 0, 0]}
+										/>
+										<Bar
+											dataKey="minor"
+											stackId="c"
+											fill={chartConfig.minor.color}
+											radius={[0, 0, 0, 0]}
+										/>
+										<Bar
+											dataKey="maintenance"
+											stackId="d"
+											fill={chartConfig.maintenance.color}
+											radius={[0, 0, 0, 0]}
+										/>
+									</BarChart>
+								) : (
+									<BarChart
+										data={timeChartData}
+										margin={{ left: -20 }}
+										height={500}
+									>
+										<CartesianGrid strokeDasharray="3 3" vertical={false} />
+										<XAxis dataKey="month" tickLine={false} axisLine={false} />
+										<YAxis
+											tickLine={false}
+											axisLine={false}
+											tickFormatter={(value) => {
+												const hours = Math.round(value / 60);
+												if (hours >= 1000) {
+													return `${(hours / 1000).toFixed(1)}K`;
+												}
+												return `${hours}h`;
+											}}
+										/>
+										<ChartTooltip
+											content={({ active, payload, label }) => {
+												if (active && payload && payload.length) {
+													const minutes = payload[0].value as number;
+													const percentage =
+														(minutes / timeChartData[0].totalMinutesInMonth) *
+														100;
+													const hours = Math.floor(minutes / 60);
+													const remainingMinutes = minutes % 60;
+													return (
+														<div className="rounded-lg border bg-background p-2 shadow-md">
+															<p className="text-sm font-medium">{`${hours}h ${remainingMinutes}m`}</p>
+															<p className="text-xs text-muted-foreground">{`${percentage.toFixed(2)}% of ${label}`}</p>
+														</div>
+													);
+												}
+												return null;
+											}}
+										/>
+										<Bar
+											dataKey="totalMinutes"
+											fill={chartConfig.major.color}
+											radius={[4, 4, 0, 0]}
+										/>
+									</BarChart>
+								)}
 							</ResponsiveContainer>
 						</ChartContainer>
 					</div>
