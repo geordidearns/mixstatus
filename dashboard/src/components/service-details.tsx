@@ -1,7 +1,14 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Label, Pie, PieChart } from "recharts";
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	ResponsiveContainer,
+	XAxis,
+	YAxis,
+} from "recharts";
 import { getServiceBySlug } from "@/queries/get-service-by-slug";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, Clock } from "lucide-react";
@@ -12,13 +19,19 @@ import Image from "next/image";
 import {
 	ChartConfig,
 	ChartContainer,
+	ChartLegend,
+	ChartLegendContent,
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
 import { Service, ServiceEvent } from "@/types";
 import { Timeline } from "./event-timeline";
-import { formatDistanceToNowStrict, parseISO } from "date-fns";
-// import { differenceInMonths } from "date-fns";
+import {
+	format,
+	formatDistanceToNowStrict,
+	parseISO,
+	subMonths,
+} from "date-fns";
 
 interface ServiceDetailsProps {
 	slug: string;
@@ -59,51 +72,43 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 function processServiceEvents(service: Service) {
-	const severityCounts = {
-		maintenance: 0,
-		minor: 0,
-		major: 0,
+	// Get the start of the 6-month range
+	const startDate = subMonths(new Date(), 5);
+
+	// Create an array of the last 6 months
+	const months = Array.from({ length: 6 }, (_, i) => {
+		const date = subMonths(new Date(), 5 - i); // 5 - i to get ascending order
+		return format(date, "MMM");
+	});
+
+	// Initialize data structure
+	const monthlyData = months.map((month) => ({
+		month,
 		critical: 0,
-	};
+		major: 0,
+		minor: 0,
+		maintenance: 0,
+	}));
 
-	// const thirtyDaysAgo = new Date();
-	// thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-	// Count events by severity across all event groups
+	// Process events
 	service?.service_events.forEach((eventGroup) => {
 		eventGroup?.events?.forEach((event) => {
-			// const eventDate = new Date(event.original_pub_date);
-			if (event?.severity) {
-				const severity =
-					event?.severity.toLowerCase() as keyof typeof severityCounts;
-				severityCounts[severity] += 1;
+			const eventDate = parseISO(event.created_at);
+
+			// Only count events that occurred after startDate
+			if (eventDate >= startDate && event?.severity) {
+				const eventMonth = format(eventDate, "MMM");
+				const monthData = monthlyData.find((data) => data.month === eventMonth);
+				if (monthData) {
+					const severity =
+						event.severity.toLowerCase() as keyof typeof chartConfig;
+					monthData[severity] += 1;
+				}
 			}
 		});
 	});
 
-	// Transform into the required pie chart structure
-	return [
-		{
-			name: "Maintenance",
-			value: severityCounts.maintenance,
-			fill: chartConfig.maintenance.color,
-		},
-		{
-			name: "Minor",
-			value: severityCounts.minor,
-			fill: chartConfig.minor.color,
-		},
-		{
-			name: "Major",
-			value: severityCounts.major,
-			fill: chartConfig.major.color,
-		},
-		{
-			name: "Critical",
-			value: severityCounts.critical,
-			fill: chartConfig.critical.color,
-		},
-	];
+	return monthlyData;
 }
 
 const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
@@ -161,10 +166,10 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 	const ongoingEvent = getMostRecentOngoingEvent(service);
 
 	const chartData = processServiceEvents(service);
-	const totalEvents: number = chartData.reduce(
-		(sum, item) => sum + item.value,
-		0,
-	);
+	// const totalEvents: number = chartData.reduce(
+	// 	(sum, item) => sum + item.value,
+	// 	0,
+	// );
 
 	return (
 		<Suspense fallback={<LoadingServices />}>
@@ -246,7 +251,7 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 						<h3 className="text-sm font-medium text-muted-foreground mb-4">
 							Disruptions
 						</h3>
-						<ChartContainer
+						{/* <ChartContainer
 							config={chartConfig}
 							className="mx-auto aspect-square max-h-[200px]"
 						>
@@ -296,6 +301,42 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 									/>
 								</Pie>
 							</PieChart>
+						</ChartContainer> */}
+
+						<ChartContainer config={chartConfig}>
+							<ResponsiveContainer width="100%" height={300}>
+								<BarChart data={chartData} margin={{ left: -32 }} height={500}>
+									<CartesianGrid strokeDasharray="3 3" vertical={false} />
+									<XAxis dataKey="month" tickLine={false} axisLine={false} />
+									<YAxis tickLine={false} axisLine={false} />
+									<ChartTooltip content={<ChartTooltipContent />} />
+									<ChartLegend content={<ChartLegendContent />} />
+									<Bar
+										dataKey="critical"
+										stackId="a"
+										fill={chartConfig.critical.color}
+										radius={[0, 0, 0, 0]} // Top bar: round top corners
+									/>
+									<Bar
+										dataKey="major"
+										stackId="b"
+										fill={chartConfig.major.color}
+										radius={[0, 0, 0, 0]} // Middle bar: no rounded corners
+									/>
+									<Bar
+										dataKey="minor"
+										stackId="c"
+										fill={chartConfig.minor.color}
+										radius={[0, 0, 0, 0]} // Middle bar: no rounded corners
+									/>
+									<Bar
+										dataKey="maintenance"
+										stackId="d"
+										fill={chartConfig.maintenance.color}
+										radius={[0, 0, 0, 0]} // Bottom bar: round bottom corners
+									/>
+								</BarChart>
+							</ResponsiveContainer>
 						</ChartContainer>
 					</div>
 				</div>

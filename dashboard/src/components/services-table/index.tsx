@@ -29,6 +29,7 @@ import { SelectedServicesToast } from "../selected-services-toast";
 // import { Switch } from "../ui/switch";
 import { OngoingIncidentCard } from "../ongoing-incident-card";
 import { NoResultsFound } from "../results-not-found";
+import Link from "next/link";
 
 export const columns: ColumnDef<Service>[] = [
 	{
@@ -434,29 +435,24 @@ export function ServicesTableContent({ searchValue }: ServicesTableProps) {
 						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 							{table.getRowModel().rows.map((row) => {
 								return (
-									<ServiceCard
-										key={row.original.id}
-										id={row.original.id}
-										name={row.original.name}
-										domain={row.original.domain}
-										// slug={row.original.slug}
-										service_events={row.original.service_events}
-										className={cn(
-											"transition-all",
-											rowSelection[row.original.id] && "border-indigo-600",
-										)}
-										// action={{
-										// 	component: (
-										// 		<Switch
-										// 			className="data-[state=checked]:bg-indigo-600 data-[state=unchecked]:text-gray-400"
-										// 			checked={!!rowSelection[row.original.id]}
-										// 			onCheckedChange={(checked) =>
-										// 				handleSelectionChange(row.original.id, checked)
-										// 			}
-										// 		/>
-										// 	),
-										// }}
-									/>
+									<div key={row.original.id} className="relative">
+										<ServiceCard
+											id={row.original.id}
+											name={row.original.name}
+											domain={row.original.domain}
+											service_events={row.original.service_events}
+											className={cn(
+												"transition-all",
+												rowSelection[row.original.id] && "border-indigo-600",
+											)}
+										/>
+										<Link
+											href={`/status/${row.original.slug}`}
+											className="absolute inset-0"
+											prefetch
+											aria-label={`View details for ${row.original.name}`}
+										/>
+									</div>
 								);
 							})}
 						</div>

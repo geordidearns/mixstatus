@@ -66,25 +66,27 @@ export function Timeline({ event }: { event: ServiceEvent }) {
 							{update.description}
 						</p>
 
-						<TooltipProvider>
-							<Tooltip delayDuration={0}>
-								<TooltipTrigger asChild>
-									<div className="text-xs tabular-nums font-semibold text-muted-foreground">
-										{formatDistanceToNowStrict(new Date(update.timestamp), {
-											addSuffix: true,
-										})}
-									</div>
-								</TooltipTrigger>
-								<TooltipContent>
-									<span className="font-semibold text-xs">
-										{format(
-											new Date(update.timestamp),
-											"EEE, MMM d, yyyy, hh:mm a (zzz)",
-										)}
-									</span>
-								</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
+						<div>
+							<TooltipProvider>
+								<Tooltip delayDuration={0}>
+									<TooltipTrigger asChild>
+										<div className="text-xs tabular-nums font-semibold text-muted-foreground">
+											{formatDistanceToNowStrict(new Date(update.timestamp), {
+												addSuffix: true,
+											})}
+										</div>
+									</TooltipTrigger>
+									<TooltipContent>
+										<span className="font-semibold text-xs">
+											{format(
+												new Date(update.timestamp),
+												"EEE, MMM d, yyyy, hh:mm a (zzz)",
+											)}
+										</span>
+									</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						</div>
 					</div>
 				</div>
 			))}

@@ -20,6 +20,7 @@ import { ServiceCard } from "../service-card";
 import { cn } from "@/lib/utils";
 import { SearchInput } from "../search-input";
 import { Service } from "@/types";
+import Link from "next/link";
 
 export const columns: ColumnDef<Service>[] = [
 	{
@@ -98,18 +99,23 @@ export function DashboardTable({ dashboardId }: { dashboardId: string }) {
 			</div>
 			<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
 				{table.getRowModel().rows.map((row) => (
-					<ServiceCard
+					<Link
 						key={row.original.id}
-						id={row.original.id}
-						name={row.original.name}
-						// slug={row.original.slug}
-						domain={row.original.domain}
-						service_events={row.original.service_events}
-						className={cn(
-							"transition-all",
-							rowSelection[row.original.id] && "border-indigo-600",
-						)}
-					/>
+						href={`/status/${row.original.slug}`}
+						className="block"
+						prefetch
+					>
+						<ServiceCard
+							id={row.original.id}
+							name={row.original.name}
+							domain={row.original.domain}
+							service_events={row.original.service_events}
+							className={cn(
+								"transition-all",
+								rowSelection[row.original.id] && "border-indigo-600",
+							)}
+						/>
+					</Link>
 				))}
 			</div>
 		</div>
