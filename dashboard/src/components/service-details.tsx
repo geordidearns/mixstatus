@@ -105,7 +105,7 @@ function processServiceEvents(service: Service) {
 	// Process events
 	service?.service_events.forEach((eventGroup) => {
 		eventGroup?.events?.forEach((event) => {
-			const eventDate = parseISO(event.created_at);
+			const eventDate = parseISO(event.original_pub_date);
 
 			// Only count events that occurred after startDate
 			if (eventDate >= startDate && event?.severity) {
@@ -126,7 +126,7 @@ function processServiceEvents(service: Service) {
 function processServiceEventTimes(service: Service) {
 	const startDate = startOfMonth(subMonths(new Date(), 6));
 
-	// Create an array of the last 6 months with start/end dates for each month
+	// Create monthly data structure
 	const monthlyData = Array.from({ length: 6 }, (_, i) => {
 		const date = subMonths(new Date(), 5 - i);
 		const monthStart = startOfMonth(date);
@@ -135,44 +135,90 @@ function processServiceEventTimes(service: Service) {
 
 		return {
 			month: format(date, "MMM"),
-			totalMinutes: 0,
+			timeRanges: [] as { start: Date; end: Date }[],
 			totalMinutesInMonth,
-			percentage: 0, // Will store percentage value
+			percentage: 0,
 		};
 	});
 
-	// Process events
+	// Process events and create time ranges
 	service?.service_events.forEach((eventGroup) => {
 		eventGroup?.events?.forEach((event) => {
-			const eventDate = parseISO(event.created_at);
+			const eventDate = parseISO(event.original_pub_date);
 
 			if (eventDate >= startDate) {
 				const eventMonth = format(eventDate, "MMM");
 				const monthData = monthlyData.find((data) => data.month === eventMonth);
 
 				if (monthData) {
+					let startTime: Date;
+					let endTime: Date;
+
 					if (event.status === "ongoing") {
-						const startTime = parseISO(event.original_pub_date);
-						const timeInMinutes = Math.floor(
-							(new Date().getTime() - startTime.getTime()) / (1000 * 60),
+						startTime = parseISO(event.original_pub_date);
+						endTime = new Date();
+					} else {
+						startTime = parseISO(event.original_pub_date);
+						endTime = new Date(
+							startTime.getTime() +
+								(event.accumulated_time_minutes || 0) * 60 * 1000,
 						);
-						monthData.totalMinutes += timeInMinutes;
-					} else if (event?.accumulated_time_minutes) {
-						monthData.totalMinutes += event.accumulated_time_minutes;
 					}
+
+					monthData.timeRanges.push({ start: startTime, end: endTime });
 				}
 			}
 		});
 	});
 
-	// Calculate percentages
+	// Merge overlapping time ranges and calculate total minutes
 	monthlyData.forEach((data) => {
+		if (data.timeRanges.length === 0) {
+			data.percentage = 0;
+			return;
+		}
+
+		// Sort ranges by start time
+		data.timeRanges.sort((a, b) => a.start.getTime() - b.start.getTime());
+
+		// Merge overlapping ranges
+		const mergedRanges: { start: Date; end: Date }[] = [];
+		let currentRange = { ...data.timeRanges[0] };
+
+		for (let i = 1; i < data.timeRanges.length; i++) {
+			const range = data.timeRanges[i];
+
+			if (range.start <= currentRange.end) {
+				// Ranges overlap, extend current range if needed
+				currentRange.end = new Date(
+					Math.max(currentRange.end.getTime(), range.end.getTime()),
+				);
+			} else {
+				// No overlap, add current range and start new one
+				mergedRanges.push(currentRange);
+				currentRange = { ...range };
+			}
+		}
+		mergedRanges.push(currentRange);
+
+		// Calculate total non-overlapping minutes
+		const totalMinutes = mergedRanges.reduce((sum, range) => {
+			return sum + differenceInMinutes(range.end, range.start);
+		}, 0);
+
 		data.percentage = Number(
-			((data.totalMinutes / data.totalMinutesInMonth) * 100).toFixed(2),
+			((totalMinutes / data.totalMinutesInMonth) * 100).toFixed(2),
 		);
 	});
 
-	return monthlyData;
+	return monthlyData.map(({ month, percentage }) => ({
+		month,
+		totalMinutes: Math.floor(
+			(percentage / 100) * monthlyData[0].totalMinutesInMonth,
+		),
+		totalMinutesInMonth: monthlyData[0].totalMinutesInMonth,
+		percentage,
+	}));
 }
 
 const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
