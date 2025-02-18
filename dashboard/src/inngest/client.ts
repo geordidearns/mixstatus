@@ -12,6 +12,12 @@ type FeedProcessing = {
 	};
 };
 
+type IncidentIoFeedProcessing = {
+	data: {
+		service_id: string;
+	};
+};
+
 type ProcessUnsummarizedEvents = {
 	data: object;
 };
@@ -32,6 +38,7 @@ type Events = {
 	"process-unsummarized": ProcessUnsummarizedEvents;
 	"process-timespan-events": ProcessTimespanEvents;
 	"summarize-timespan-event": SummarizeTimespanEvent;
+	"incident-io-feed-processing": IncidentIoFeedProcessing;
 };
 
 export const inngest = new Inngest({

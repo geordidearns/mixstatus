@@ -91,7 +91,7 @@ export async function getOngoingDisruptions(
 	nameFilter?: string,
 ): Promise<Service[]> {
 	const now = new Date();
-	const twoWeeksAgo = endOfDay(subDays(now, 14));
+	const sevenDaysAgo = endOfDay(subDays(now, 7));
 	const endOfToday = endOfDay(now);
 
 	try {
@@ -99,27 +99,35 @@ export async function getOngoingDisruptions(
 			.from("services")
 			.select(
 				`
+			id,
+			name,
+			slug,
+			domain,
+			service_events (
 				id,
-				name,
-				slug,
-				domain,
-				service_events (
-					id,
-					title,
-					summarized_description,
-					parsed_events,
-					status,
-					severity,
-					accumulated_time_minutes,
-					original_pub_date,
-					created_at,
-					updated_at,
-					affected_region,
-					affected_components
-				)
-			`,
+				title,
+				summarized_description,
+				parsed_events,
+				status,
+				severity,
+				accumulated_time_minutes,
+				original_pub_date,
+				created_at,
+				updated_at,
+				affected_region,
+				affected_components
+			)
+		`,
 			)
 			.eq("service_events.status", "ongoing")
+			.gte(
+				"service_events.original_pub_date",
+				format(sevenDaysAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+			)
+			.lte(
+				"service_events.original_pub_date",
+				format(endOfToday, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+			)
 			.order("name");
 
 		if (nameFilter) {
@@ -129,7 +137,7 @@ export async function getOngoingDisruptions(
 		const { data, error } = await query
 			.gte(
 				"service_events.original_pub_date",
-				format(twoWeeksAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+				format(sevenDaysAgo, "yyyy-MM-dd'T'HH:mm:ssXXX"),
 			)
 			.lte(
 				"service_events.original_pub_date",

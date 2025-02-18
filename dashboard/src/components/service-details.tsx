@@ -126,99 +126,48 @@ function processServiceEvents(service: Service) {
 function processServiceEventTimes(service: Service) {
 	const startDate = startOfMonth(subMonths(new Date(), 6));
 
-	// Create monthly data structure
 	const monthlyData = Array.from({ length: 6 }, (_, i) => {
 		const date = subMonths(new Date(), 5 - i);
 		const monthStart = startOfMonth(date);
 		const monthEnd = endOfMonth(date);
-		const totalMinutesInMonth = differenceInMinutes(monthEnd, monthStart) + 1;
+		const totalHoursInMonth = Math.round(
+			(differenceInMinutes(monthEnd, monthStart) + 1) / 60,
+		);
 
 		return {
 			month: format(date, "MMM"),
-			timeRanges: [] as { start: Date; end: Date }[],
-			totalMinutesInMonth,
-			percentage: 0,
+			critical: 0,
+			major: 0,
+			minor: 0,
+			maintenance: 0,
+			totalHoursInMonth,
 		};
 	});
 
-	// Process events and create time ranges
 	service?.service_events.forEach((eventGroup) => {
 		eventGroup?.events?.forEach((event) => {
 			const eventDate = parseISO(event.original_pub_date);
+			const severity =
+				event.severity?.toLowerCase() as keyof typeof chartConfig;
 
-			if (eventDate >= startDate) {
+			if (eventDate >= startDate && severity) {
 				const eventMonth = format(eventDate, "MMM");
 				const monthData = monthlyData.find((data) => data.month === eventMonth);
 
 				if (monthData) {
-					let startTime: Date;
-					let endTime: Date;
+					const minutes =
+						event.status === "ongoing"
+							? differenceInMinutes(new Date(), eventDate)
+							: event.accumulated_time_minutes || 0;
 
-					if (event.status === "ongoing") {
-						startTime = parseISO(event.original_pub_date);
-						endTime = new Date();
-					} else {
-						startTime = parseISO(event.original_pub_date);
-						endTime = new Date(
-							startTime.getTime() +
-								(event.accumulated_time_minutes || 0) * 60 * 1000,
-						);
-					}
-
-					monthData.timeRanges.push({ start: startTime, end: endTime });
+					// Convert minutes to hours and round to nearest hour
+					monthData[severity] = Math.round(monthData[severity] + minutes / 60);
 				}
 			}
 		});
 	});
 
-	// Merge overlapping time ranges and calculate total minutes
-	monthlyData.forEach((data) => {
-		if (data.timeRanges.length === 0) {
-			data.percentage = 0;
-			return;
-		}
-
-		// Sort ranges by start time
-		data.timeRanges.sort((a, b) => a.start.getTime() - b.start.getTime());
-
-		// Merge overlapping ranges
-		const mergedRanges: { start: Date; end: Date }[] = [];
-		let currentRange = { ...data.timeRanges[0] };
-
-		for (let i = 1; i < data.timeRanges.length; i++) {
-			const range = data.timeRanges[i];
-
-			if (range.start <= currentRange.end) {
-				// Ranges overlap, extend current range if needed
-				currentRange.end = new Date(
-					Math.max(currentRange.end.getTime(), range.end.getTime()),
-				);
-			} else {
-				// No overlap, add current range and start new one
-				mergedRanges.push(currentRange);
-				currentRange = { ...range };
-			}
-		}
-		mergedRanges.push(currentRange);
-
-		// Calculate total non-overlapping minutes
-		const totalMinutes = mergedRanges.reduce((sum, range) => {
-			return sum + differenceInMinutes(range.end, range.start);
-		}, 0);
-
-		data.percentage = Number(
-			((totalMinutes / data.totalMinutesInMonth) * 100).toFixed(2),
-		);
-	});
-
-	return monthlyData.map(({ month, percentage }) => ({
-		month,
-		totalMinutes: Math.floor(
-			(percentage / 100) * monthlyData[0].totalMinutesInMonth,
-		),
-		totalMinutesInMonth: monthlyData[0].totalMinutesInMonth,
-		percentage,
-	}));
+	return monthlyData;
 }
 
 const getMostRecentOngoingEvent = (service: Service): ServiceEvent | null => {
@@ -376,10 +325,10 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem className="text-xs" value="events">
-										Disruption Type
+										Count
 									</SelectItem>
 									<SelectItem className="text-xs" value="time">
-										Total Time
+										Time (hours)
 									</SelectItem>
 								</SelectContent>
 							</Select>
@@ -434,37 +383,33 @@ export function ServiceDetails({ slug }: ServiceDetailsProps) {
 										<YAxis
 											tickLine={false}
 											axisLine={false}
-											tickFormatter={(value) => {
-												const hours = Math.round(value / 60);
-												if (hours >= 1000) {
-													return `${(hours / 1000).toFixed(1)}K`;
-												}
-												return `${hours}h`;
-											}}
+											tickFormatter={(value) => `${Math.round(value)}h`}
 										/>
-										<ChartTooltip
-											content={({ active, payload, label }) => {
-												if (active && payload && payload.length) {
-													const minutes = payload[0].value as number;
-													const percentage =
-														(minutes / timeChartData[0].totalMinutesInMonth) *
-														100;
-													const hours = Math.floor(minutes / 60);
-													const remainingMinutes = minutes % 60;
-													return (
-														<div className="rounded-lg border bg-background p-2 shadow-md">
-															<p className="text-sm font-medium">{`${hours}h ${remainingMinutes}m`}</p>
-															<p className="text-xs text-muted-foreground">{`${percentage.toFixed(2)}% of ${label}`}</p>
-														</div>
-													);
-												}
-												return null;
-											}}
+										<ChartTooltip content={<ChartTooltipContent />} />
+										<ChartLegend content={<ChartLegendContent />} />
+										<Bar
+											dataKey="critical"
+											stackId="a"
+											fill={chartConfig.critical.color}
+											radius={[0, 0, 0, 0]}
 										/>
 										<Bar
-											dataKey="totalMinutes"
+											dataKey="major"
+											stackId="b"
 											fill={chartConfig.major.color}
-											radius={[4, 4, 0, 0]}
+											radius={[0, 0, 0, 0]}
+										/>
+										<Bar
+											dataKey="minor"
+											stackId="c"
+											fill={chartConfig.minor.color}
+											radius={[0, 0, 0, 0]}
+										/>
+										<Bar
+											dataKey="maintenance"
+											stackId="d"
+											fill={chartConfig.maintenance.color}
+											radius={[0, 0, 0, 0]}
 										/>
 									</BarChart>
 								)}
