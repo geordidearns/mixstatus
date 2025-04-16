@@ -4,19 +4,19 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import ReactQueryProvider from "@/lib/react-query/provider";
-// import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 
 export default async function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	// const sidebarState = (await cookies()).get("sidebar:state");
+	const sidebarState = (await cookies()).get("sidebar:state");
 
-	// let defaultOpen = false;
-	// if (sidebarState) {
-	// 	defaultOpen = sidebarState.value === "true";
-	// }
+	let defaultOpen = false;
+	if (sidebarState) {
+		defaultOpen = sidebarState.value === "true";
+	}
 
 	return (
 		<>
@@ -29,7 +29,7 @@ export default async function RootLayout({
 					storageKey="ui-theme"
 				>
 					<div suppressHydrationWarning>
-						<SidebarProvider defaultOpen={false}>
+						<SidebarProvider defaultOpen={defaultOpen}>
 							<AppSidebar />
 							<SidebarInset>
 								<main className="relative z-0">{children}</main>

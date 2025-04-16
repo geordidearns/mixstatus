@@ -8,10 +8,7 @@ import {
 	getOngoingDisruptions,
 	getServicesAndEvents,
 } from "@/queries/get-services";
-// import { SidebarTrigger } from "@/components/ui/sidebar";
-// import { OnboardingCard } from "@/components/onboarding-card";
 import { ServicesWrapper } from "@/components/services-wrapper";
-// import CohortAnalysis from "@/components/cohort";
 import { showHeader } from "@/flags";
 import { Header } from "@/components/header";
 
@@ -20,18 +17,18 @@ async function prefetchData() {
 	const supabase = await createClient();
 
 	await Promise.all([
+		queryClient.prefetchQuery({
+			queryKey: ["ongoing-disruptions"],
+			queryFn: () => getOngoingDisruptions(supabase),
+			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
+			gcTime: 10 * 60 * 1000, // Cache time 10 minutes
+		}),
 		queryClient.prefetchInfiniteQuery({
 			queryKey: ["services-and-events"],
 			queryFn: ({ pageParam }) => getServicesAndEvents(supabase, pageParam),
 			initialPageParam: 0,
 			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
 			gcTime: 10 * 60 * 1000, // Increase gc time to 10 minutes
-		}),
-		queryClient.prefetchQuery({
-			queryKey: ["ongoing-disruptions"],
-			queryFn: () => getOngoingDisruptions(supabase),
-			staleTime: 5 * 60 * 1000, // Increase stale time to 5 minutes
-			gcTime: 10 * 60 * 1000, // Cache time 10 minutes
 		}),
 	]);
 

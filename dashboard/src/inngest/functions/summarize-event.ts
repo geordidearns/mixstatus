@@ -69,7 +69,7 @@ const schema = {
 		},
 		description: {
 			type: SchemaType.STRING,
-			description: "Summary description of the entire event",
+			description: "Summary description of all parsed events",
 			nullable: false,
 		},
 		severity: {
